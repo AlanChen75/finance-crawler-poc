@@ -44,7 +44,7 @@ sources:
     topic: 上市櫃公司公告
     transport: browser
     url: https://mops.twse.com.tw/mops/#/web/index
-    required_terms: [公開資訊觀測站]
+    required_terms: [單一公司彙總報表, 重大訊息]
 
   - id: ptt_stock
     name: PTT Stock 看板
