@@ -60,6 +60,7 @@ class Crawl4AIAdapter:
         config = CrawlerRunConfig(
             cache_mode=CacheMode.BYPASS,
             check_robots_txt=True,
+            delay_before_return_html=1.0,
             page_timeout=source.timeout_seconds * 1_000,
             wait_until="domcontentloaded",
         )

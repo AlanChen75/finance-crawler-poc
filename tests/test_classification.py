@@ -10,6 +10,13 @@ from finance_crawler_poc.models import Outcome
         (429, "", "", Outcome.RATE_LIMITED),
         (403, "", "Access denied", Outcome.BLOCKED),
         (200, "", "Cloudflare CAPTCHA challenge", Outcome.BLOCKED),
+        (
+            200,
+            "Blocked by anti-bot protection: script_heavy_shell",
+            "",
+            Outcome.BLOCKED,
+        ),
+        (200, "", "Akamai Technologies stock news", Outcome.ERROR),
         (None, "certificate verify failed", "", Outcome.TLS_ERROR),
         (None, "operation timed out", "", Outcome.TIMEOUT),
         (503, "service unavailable", "", Outcome.HTTP_ERROR),

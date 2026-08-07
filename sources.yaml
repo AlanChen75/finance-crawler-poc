@@ -59,7 +59,7 @@ sources:
     transport: browser
     provenance: crawl4ai_example
     url: https://finance.yahoo.com/quote/AAPL/
-    required_terms: [AAPL]
+    required_terms: [AAPL, Apple]
 
   - id: coinmarketcap_page_1
     name: CoinMarketCap 第一頁

@@ -6,8 +6,9 @@ from finance_crawler_poc.models import Outcome
 BLOCK_MARKERS = (
     "access denied",
     "captcha",
-    "cloudflare",
-    "akamai",
+    "blocked by anti-bot protection",
+    "attention required! | cloudflare",
+    "cf-chl-",
     "datadome",
     "verify you are human",
     "bot detection",

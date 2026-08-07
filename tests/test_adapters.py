@@ -72,6 +72,7 @@ def test_crawl4ai_adapter_enforces_robots_and_page_timeout(monkeypatch) -> None:
     assert response.content == "market evidence"
     assert captured["check_robots_txt"] is True
     assert captured["page_timeout"] == 40_000
+    assert captured["delay_before_return_html"] == 1.0
 
 
 def test_markdown_text_handles_none_raw_and_plain_values() -> None:
