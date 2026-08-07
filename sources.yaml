@@ -1,0 +1,103 @@
+version: 1
+defaults:
+  timeout_seconds: 40
+  retries: 1
+  min_content_chars: 300
+sources:
+  - id: twse_openapi_stock_day
+    name: TWSE OpenAPI 每日收盤行情
+    topic: 台股市場資料
+    transport: json_api
+    url: https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL
+    required_terms: [Code, Name]
+
+  - id: bbc_business_rss
+    name: BBC Business RSS
+    topic: 國際財經新聞
+    transport: rss
+    url: https://feeds.bbci.co.uk/news/business/rss.xml
+    required_terms: [channel, item]
+
+  - id: cbc_taiwan_news
+    name: 中央銀行新聞稿
+    topic: 利率與貨幣政策
+    transport: browser
+    url: https://www.cbc.gov.tw/tw/lp-302-1.html
+    required_terms: [中央銀行]
+
+  - id: fsc_taiwan_news
+    name: 金管會最新消息
+    topic: 金融監理與投資人保護
+    transport: browser
+    url: https://www.fsc.gov.tw/ch/home.jsp?id=96&parentpath=0
+    required_terms: [金融監督管理委員會]
+
+  - id: twse_stock_day_page
+    name: TWSE 個股日成交資訊
+    topic: 台股歷史行情
+    transport: browser
+    url: https://www.twse.com.tw/zh/trading/historical/stock-day.html
+    required_terms: [個股日成交資訊]
+
+  - id: mops_home
+    name: 公開資訊觀測站
+    topic: 上市櫃公司公告
+    transport: browser
+    url: https://mops.twse.com.tw/mops/#/web/index
+    required_terms: [公開資訊觀測站]
+
+  - id: ptt_stock
+    name: PTT Stock 看板
+    topic: 台股社群討論
+    transport: browser
+    url: https://www.ptt.cc/bbs/Stock/index.html
+    required_terms: [看板, Stock]
+
+  - id: yahoo_finance_aapl
+    name: Yahoo Finance AAPL
+    topic: 美股個股行情
+    transport: browser
+    provenance: crawl4ai_example
+    url: https://finance.yahoo.com/quote/AAPL/
+    required_terms: [AAPL]
+
+  - id: coinmarketcap_page_1
+    name: CoinMarketCap 第一頁
+    topic: 加密資產行情
+    transport: browser
+    provenance: crawl4ai_example
+    url: https://coinmarketcap.com/?page=1
+    required_terms: [Bitcoin]
+
+  - id: finviz_home
+    name: Finviz 首頁
+    topic: 美股市場掃描
+    transport: browser
+    provenance: crawl4ai_example
+    url: https://finviz.com/
+    required_terms: [FINVIZ]
+
+  - id: nbc_business
+    name: NBC Business
+    topic: 美國商業新聞
+    transport: browser
+    provenance: crawl4ai_example
+    url: https://www.nbcnews.com/business
+    required_terms: [Business]
+
+  - id: wikipedia_gdp_nominal
+    name: Wikipedia 名目 GDP 列表
+    topic: 總體經濟比較
+    transport: browser
+    provenance: crawl4ai_example
+    url: https://en.wikipedia.org/wiki/List_of_countries_by_GDP_(nominal)
+    required_terms: [GDP]
+
+  - id: sec_edgar_company_search
+    name: SEC EDGAR 公司查詢
+    topic: 美國公司申報
+    transport: browser
+    url: https://www.sec.gov/edgar/searchedgar/companysearch
+    enabled: false
+    disabled_reason: SEC 要求 User-Agent 包含可聯絡的姓名與 email；公開 repo 尚未配置
+    required_terms: [EDGAR]
