@@ -35,6 +35,9 @@ class Source:
     provenance: str = "curated"
     kind: str = "other"
     selection_evidence: str = ""
+    community_type: str = "not_applicable"
+    region: str = "global"
+    access_tier: str = "public_web"
 
 
 @dataclass(frozen=True)
@@ -69,6 +72,9 @@ class ProbeResult:
     provenance: str = "curated"
     selection_evidence: str = ""
     run_index: int = 1
+    community_type: str = "not_applicable"
+    region: str = "global"
+    access_tier: str = "public_web"
 
     def to_dict(self) -> dict[str, Any]:
         payload = asdict(self)

@@ -1,0 +1,92 @@
+# 國外財經社群來源全集與分層爬蟲評估契約
+
+研究日期：2026-08-07
+
+## 「全面」的操作定義
+
+網路上不存在可證明封閉的「所有財經社群」名單。本專案把全面定義為：覆蓋所有主流資料取得形態、主要財經討論族群與代表性區域市場，並把無法匿名取得的主流平台保留在 catalog，而不是假裝不存在。
+
+`foreign-community-sources.yaml` 目前包含 85 條獨立來源路徑：72 條可由 GitHub Actions 匿名探測、13 條 catalog-only。可跑路徑分為 39 條 browser、19 條 JSON API、14 條 RSS/Atom；同一社群的 HTML、JSON、feed 各算一條路徑，用來直接比較分層策略。
+
+這不是「85 個互不重複網站」：它是跨約 40 個公開社群／開源生態與 13 個受限生態的 85 條取得路徑。Reddit 的不同 subreddit、Telegram 頻道、Discord server 與 Facebook group 數量會持續變動，因此 catalog 以平台與代表性財經入口為單位。
+
+## 涵蓋的討論類型
+
+| 類型 | 代表來源 |
+|---|---|
+| 個人理財／FIRE | Bogleheads、MoneySavingExpert、Financial Wisdom、Mr. Money Mustache、Rational Reminder、White Coat Investor、Money Stack Exchange |
+| 零售投資 | Reddit、InvestorsHub、HotCopper、ADVFN、Silicon Investor、RedFlagDeals、Rankia、Wertpapier、Moneycontrol |
+| 主動交易 | Elite Trader、Trade2Win、Aussie Stock Forums、MQL5、Trading Q&A |
+| 價值投資 | Value Investors Club、Corner of Berkshire and Fairfax、ValuePickr |
+| 量化交易 | Quant Stack Exchange、QuantConnect、Lean、Backtrader、Jesse |
+| 加密資產 | Bitcointalk、Bitcoin Stack Exchange、Ethereum Research、Ethereum Magicians、Hummingbot、CoinMarketCap Community |
+| 社群投資 | TradingView、Stocktwits、Seeking Alpha、Investing.com、eToro、Mastodon、Bluesky、X、YouTube |
+| 開源開發者生態 | OpenBB、Freqtrade、Lean、Hummingbot、Backtrader、Jesse、Hacker News |
+| 專業金融職涯 | Wall Street Oasis、LinkedIn groups、Slack workspaces |
+
+區域維度涵蓋 global、US、UK、AU、CA、IN、ES 與 DE；非英語代表包括 Rankia、西班牙語社群，Wertpapier、德語社群，以及印度的 Trading Q&A、ValuePickr、Moneycontrol。
+
+選源規模證據包括：
+
+- [InvestorsHub About](https://investorshub.advfn.com/boards/about.aspx) 公開會員、訊息與 boards 數量；
+- [HotCopper About](https://hotcopper.com.au/help/about/) 說明其澳洲投資論壇定位；
+- [Rankia Forums](https://www.rankia.com/foros) 提供西語股票、基金與個人理財論壇的公開活動量；
+- [Bogleheads About](https://www.bogleheads.org/forum/about) 公開會員、貼文與流量級距；
+- [ADVFN discussion forums](https://uk.advfn.com/welcome/discussion-forums) 說明免費與 premium boards 的界線；
+- [QuantConnect forum docs](https://www.quantconnect.com/docs/v2/cloud-platform/community/forum) 說明量化策略、實作與發文資格。
+
+完整證據 URL 保存在每筆來源的 `selection_evidence`，不依賴本文件的二手摘要。
+
+## Browser＋API＋RSS 分層假設
+
+```text
+公開社群
+  ├─ 官方 API / 公開 JSON：優先，結構化且容易驗證
+  ├─ RSS / Atom：次優先，低成本且適合新內容發現
+  └─ Browser / Crawl4AI：只補沒有機器介面或需要渲染的公開頁
+
+受限社群
+  ├─ OAuth / API key / bot installation：取得授權後走 API
+  ├─ 會員或付費內容：不以 browser 繞過
+  └─ 無合法匯出路徑：標記 catalog-only
+```
+
+同站多路徑的關鍵對照組：
+
+| 社群家族 | Browser | JSON/API | RSS/Atom |
+|---|---:|---:|---:|
+| Stack Exchange：Money／Bitcoin／Quant | ✓ | ✓ | ✓ |
+| Discourse：Trading Q&A／ValuePickr／Rational Reminder | ✓ | ✓ | ✓ |
+| Ethereum Research／Magicians | — | ✓ | ✓ |
+| XenForo：Elite Trader／Trade2Win／Aussie Stock Forums | ✓ | — | ✓ |
+| Bogleheads／MoneySavingExpert | ✓ | — | ✓（邊界探測） |
+| Reddit | ✓ | 匿名 JSON 邊界＋OAuth catalog | — |
+
+若 HTML 被 Cloudflare、Akamai 或 robots 擋住但官方 JSON/feed 通過，分層策略成立；若三條路徑都拒絕，則必須取得正式授權或放棄該來源，不能靠更激進的 browser 偽裝。
+
+## 認證與合規邊界
+
+- Reddit 正式路徑依 [Data API Terms](https://redditinc.com/policies/data-api-terms) 與 OAuth；匿名 JSON 只用來量測邊界。
+- X 官方文件目前描述為 [pay-per-use API](https://docs.x.com/overview)；無 token 請求只驗證 `auth_required` 分類。
+- YouTube 留言應走 [`commentThreads.list`](https://developers.google.com/youtube/v3/docs/commentThreads/list) 並使用 API key；不爬 rendered comments 來規避配額。
+- Discord 需要 bot/OAuth token 與 `READ_MESSAGE_HISTORY` 等權限，依 [Discord API reference](https://docs.discord.com/developers/reference)。
+- Mastodon public timeline 是否要求 token 由 instance 的 public-preview 設定決定，依 [官方 timeline 文件](https://docs.joinmastodon.org/methods/timelines/)。
+- Bluesky 多數 public AppView endpoints 可匿名呼叫，依 [API hosts and auth](https://docs.bsky.app/docs/advanced-guides/api-directory)；仍需接受服務端限流或封鎖結果。
+- GitHub 公開 repository issues 可無認證讀取，但受較低 rate limit；依 [GitHub REST issues 文件](https://docs.github.com/en/rest/issues/issues)。
+
+Facebook／LinkedIn groups、WhatsApp communities、Slack workspaces、Public.com、Webull、Substack Chat／comments 等會員資料保持停用。Telegram 完整頻道歷史也不以 `t.me` 網頁替代正式 MTProto 權限。
+
+## GitHub Actions 驗收與成本上限
+
+手動 workflow 的 `scope` 是固定 choice，只能選 `core` 或 `foreign_communities`，避免把任意路徑注入 runner。全面矩陣每個啟用來源：
+
+- 最多 20 秒；
+- 不自動重試；
+- 來源間隔 1 秒；
+- 預設重複兩輪；
+- browser 一律檢查 robots.txt；
+- 每輪都必須為 85 條來源產生結果，停用項目也必須明確記錄。
+
+兩輪應產生 170 筆結果，其中 144 筆為實際匿名探測、26 筆為明確停用紀錄。理論最壞探測時間約 50.4 分鐘，再加環境安裝仍應落在 workflow 的 60 分鐘上限內；實際值必須由 Actions run 量測，不能用此上限當成效能結果。
+
+報表 schema v3 必須提供：`by_transport`、`by_kind`、`by_community_type`、`by_region`、`by_access_tier` 與 `source_stability`。`success` 只代表該公開入口通過當時的 transport、最低長度與必要詞契約，不代表可完整回溯歷史、取得留言、合法再發布或內容可信。

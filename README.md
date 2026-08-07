@@ -23,6 +23,8 @@
 
 熱門社群的選擇依據、能力假設與合規邊界見 [`docs/source-selection.md`](docs/source-selection.md)。實際可用性以 GitHub Actions 產出的 `report.json` 為準，不以本文件或單次本機請求推定。
 
+國外社群的全面矩陣獨立放在 [`foreign-community-sources.yaml`](foreign-community-sources.yaml)，避免官方資料探測與社群平台邊界互相稀釋。它包含可匿名實跑路徑及需要 OAuth、API key、會員或商業授權的 catalog-only 路徑；範圍定義與分層策略見 [`docs/foreign-community-landscape.md`](docs/foreign-community-landscape.md)。GitHub Actions 手動觸發時可選 `core` 或 `foreign_communities` scope。
+
 ## 本機開發
 
 ```bash
@@ -30,6 +32,7 @@ python -m pip install -e '.[test]'
 python -m playwright install chromium
 pytest --cov --cov-report=term-missing
 finance-crawler-probe --manifest sources.yaml --output artifacts --repeat 2
+finance-crawler-probe --manifest foreign-community-sources.yaml --output artifacts --repeat 2
 ```
 
 本專案將 Crawl4AI 明確列為核心依賴並保留上游歸屬；Crawl4AI 專案採 Apache 2.0 加額外 attribution 條款，公開使用時應依其 LICENSE 要求標示。

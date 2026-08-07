@@ -11,6 +11,9 @@ def result(
     *,
     transport: str = "browser",
     kind: str = "community",
+    community_type: str = "retail_investing",
+    region: str = "US",
+    access_tier: str = "public_web",
     run_index: int = 1,
 ) -> ProbeResult:
     return ProbeResult(
@@ -28,6 +31,9 @@ def result(
         preview="evidence" if outcome is Outcome.SUCCESS else "",
         error="" if outcome is Outcome.SUCCESS else "blocked",
         kind=kind,
+        community_type=community_type,
+        region=region,
+        access_tier=access_tier,
         provenance="test",
         run_index=run_index,
     )
@@ -38,12 +44,23 @@ def test_write_reports_emits_machine_and_human_readable_contract(tmp_path: Path)
         [
             result("ok", Outcome.SUCCESS),
             result("ok", Outcome.SUCCESS, run_index=2),
-            result("no", Outcome.BLOCKED, transport="json_api", kind="market_data"),
+            result(
+                "no",
+                Outcome.BLOCKED,
+                transport="json_api",
+                kind="market_data",
+                community_type="quantitative",
+                region="global",
+                access_tier="public_api",
+            ),
             result(
                 "no",
                 Outcome.AUTH_REQUIRED,
                 transport="json_api",
                 kind="market_data",
+                community_type="quantitative",
+                region="global",
+                access_tier="public_api",
                 run_index=2,
             ),
         ],
@@ -54,7 +71,7 @@ def test_write_reports_emits_machine_and_human_readable_contract(tmp_path: Path)
     payload = json.loads(paths.json_path.read_text(encoding="utf-8"))
     markdown = paths.markdown_path.read_text(encoding="utf-8")
 
-    assert payload["schema_version"] == 2
+    assert payload["schema_version"] == 3
     assert payload["summary"] == {"auth_required": 1, "blocked": 1, "success": 2}
     assert payload["breakdown"]["by_transport"] == {
         "browser": {"success": 2},
@@ -63,6 +80,18 @@ def test_write_reports_emits_machine_and_human_readable_contract(tmp_path: Path)
     assert payload["breakdown"]["by_kind"] == {
         "community": {"success": 2},
         "market_data": {"auth_required": 1, "blocked": 1},
+    }
+    assert payload["breakdown"]["by_community_type"] == {
+        "quantitative": {"auth_required": 1, "blocked": 1},
+        "retail_investing": {"success": 2},
+    }
+    assert payload["breakdown"]["by_region"] == {
+        "US": {"success": 2},
+        "global": {"auth_required": 1, "blocked": 1},
+    }
+    assert payload["breakdown"]["by_access_tier"] == {
+        "public_api": {"auth_required": 1, "blocked": 1},
+        "public_web": {"success": 2},
     }
     assert payload["source_stability"] == [
         {"source_id": "ok", "observations": 2, "successes": 2, "outcomes": {"success": 2}},
@@ -74,5 +103,5 @@ def test_write_reports_emits_machine_and_human_readable_contract(tmp_path: Path)
         },
     ]
     assert [item["source_id"] for item in payload["results"]] == ["ok", "ok", "no", "no"]
-    assert "| ok | community | browser | 2/2 | success=2 |" in markdown
-    assert "| 2 | no | market_data | json_api | auth_required | - |" in markdown
+    assert "| ok | retail_investing | US | public_web | browser | 2/2 | success=2 |" in markdown
+    assert "| 2 | no | quantitative | global | public_api | json_api | auth_required | - |" in markdown

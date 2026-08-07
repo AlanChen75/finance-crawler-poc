@@ -25,6 +25,9 @@ sources:
     name: API
     topic: prices
     kind: official_data
+    community_type: quantitative
+    region: global
+    access_tier: public_api
     transport: json_api
     url: https://example.com/data.json
     selection_evidence: https://example.com/docs
@@ -46,9 +49,15 @@ sources:
     assert manifest.sources[0].retries == 2
     assert manifest.sources[0].min_content_chars == 50
     assert manifest.sources[0].kind == "official_data"
+    assert manifest.sources[0].community_type == "quantitative"
+    assert manifest.sources[0].region == "global"
+    assert manifest.sources[0].access_tier == "public_api"
     assert manifest.sources[0].selection_evidence == "https://example.com/docs"
     assert manifest.sources[1].enabled is False
     assert manifest.sources[1].disabled_reason == "contact identity required"
+    assert manifest.sources[1].community_type == "not_applicable"
+    assert manifest.sources[1].region == "global"
+    assert manifest.sources[1].access_tier == "public_web"
 
 
 @pytest.mark.parametrize(
@@ -118,6 +127,30 @@ sources:
   - {id: bad_evidence, name: Bad, topic: x, transport: browser, url: https://example.com, selection_evidence: file:///tmp/note}
 """,
             "selection_evidence",
+        ),
+        (
+            """
+version: 1
+sources:
+  - {id: bad_community_type, name: Bad, topic: x, transport: browser, url: https://example.com, community_type: meme_only}
+""",
+            "community_type",
+        ),
+        (
+            """
+version: 1
+sources:
+  - {id: bad_access, name: Bad, topic: x, transport: browser, url: https://example.com, access_tier: bypass_paywall}
+""",
+            "access_tier",
+        ),
+        (
+            """
+version: 1
+sources:
+  - {id: bad_region, name: Bad, topic: x, transport: browser, url: https://example.com, region: ../private}
+""",
+            "region",
         ),
     ],
 )

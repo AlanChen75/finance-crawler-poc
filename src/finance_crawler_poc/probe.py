@@ -180,6 +180,9 @@ def _result(
         provenance=source.provenance,
         selection_evidence=source.selection_evidence,
         run_index=run_index,
+        community_type=source.community_type,
+        region=source.region,
+        access_tier=source.access_tier,
     )
 
 

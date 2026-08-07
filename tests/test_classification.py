@@ -12,6 +12,7 @@ from finance_crawler_poc.models import Outcome
         (400, "", "Variable api_key has not been set", Outcome.AUTH_REQUIRED),
         (400, "", "Bad Request. Variable api_key is not set.", Outcome.AUTH_REQUIRED),
         (200, "", "The parameter apikey is invalid or missing", Outcome.AUTH_REQUIRED),
+        (403, "", "API key not valid. Please pass a valid API key.", Outcome.AUTH_REQUIRED),
         (403, "", "Access denied", Outcome.BLOCKED),
         (403, "", "HTML stylesheet contains a tls class name", Outcome.BLOCKED),
         (200, "", "Cloudflare CAPTCHA challenge", Outcome.BLOCKED),

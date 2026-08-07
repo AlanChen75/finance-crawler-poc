@@ -26,7 +26,33 @@ ALLOWED_KINDS = frozenset(
         "reference",
     }
 )
+ALLOWED_COMMUNITY_TYPES = frozenset(
+    {
+        "active_trading",
+        "crypto",
+        "developer_ecosystem",
+        "not_applicable",
+        "personal_finance",
+        "professional_finance",
+        "quantitative",
+        "retail_investing",
+        "social_investing",
+        "value_investing",
+    }
+)
+ALLOWED_ACCESS_TIERS = frozenset(
+    {
+        "auth_boundary",
+        "commercial_api",
+        "credentialed_api",
+        "member_only",
+        "public_api",
+        "public_feed",
+        "public_web",
+    }
+)
 SOURCE_ID_PATTERN = re.compile(r"^[a-z][a-z0-9_]{1,63}$")
+REGION_PATTERN = re.compile(r"^[A-Za-z][A-Za-z0-9_-]{1,31}$")
 BASE_DEFAULTS: Mapping[str, int] = {
     "timeout_seconds": 40,
     "retries": 1,
@@ -122,6 +148,27 @@ def _parse_source(item: Mapping[str, Any], index: int) -> Source:
             raise ManifestError(
                 f"source {values['id']} selection_evidence must use a public http or https URL"
             ) from exc
+    community_type = item.get("community_type", "not_applicable")
+    if not isinstance(community_type, str) or community_type not in ALLOWED_COMMUNITY_TYPES:
+        raise ManifestError(
+            f"source {values['id']} community_type must be one of "
+            f"{sorted(ALLOWED_COMMUNITY_TYPES)}"
+        )
+    region = item.get("region", "global")
+    if not isinstance(region, str) or not REGION_PATTERN.fullmatch(region):
+        raise ManifestError(
+            f"source {values['id']} region must be a 2-32 character region code"
+        )
+    default_access_tier = {
+        "browser": "public_web",
+        "json_api": "public_api",
+        "rss": "public_feed",
+    }[values["transport"]]
+    access_tier = item.get("access_tier", default_access_tier)
+    if not isinstance(access_tier, str) or access_tier not in ALLOWED_ACCESS_TIERS:
+        raise ManifestError(
+            f"source {values['id']} access_tier must be one of {sorted(ALLOWED_ACCESS_TIERS)}"
+        )
 
     return Source(
         id=values["id"],
@@ -138,6 +185,9 @@ def _parse_source(item: Mapping[str, Any], index: int) -> Source:
         provenance=provenance.strip(),
         kind=kind,
         selection_evidence=selection_evidence.strip(),
+        community_type=community_type,
+        region=region,
+        access_tier=access_tier,
     )
 
 

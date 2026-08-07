@@ -23,12 +23,15 @@ def write_reports(
     output_dir.mkdir(parents=True, exist_ok=True)
     summary = dict(sorted(Counter(item.outcome.value for item in results).items()))
     payload = {
-        "schema_version": 2,
+        "schema_version": 3,
         "generated_at": generated_at,
         "summary": summary,
         "breakdown": {
             "by_transport": _breakdown(results, "transport"),
             "by_kind": _breakdown(results, "kind"),
+            "by_community_type": _breakdown(results, "community_type"),
+            "by_region": _breakdown(results, "region"),
+            "by_access_tier": _breakdown(results, "access_tier"),
         },
         "source_stability": _source_stability(results),
         "results": [item.to_dict() for item in results],
@@ -56,8 +59,8 @@ def _render_markdown(
         "",
         "## Source stability",
         "",
-        "| source | kind | transport | success/runs | outcomes |",
-        "|---|---|---|---:|---|",
+        "| source | community | region | access | transport | success/runs | outcomes |",
+        "|---|---|---|---|---|---:|---|",
     ]
     stability = _source_stability(results)
     first_result = {item.source_id: item for item in results}
@@ -65,7 +68,8 @@ def _render_markdown(
         source = first_result[item["source_id"]]
         outcomes = ", ".join(f"{key}={value}" for key, value in item["outcomes"].items())
         lines.append(
-            f"| {item['source_id']} | {source.kind} | {source.transport} | "
+            f"| {item['source_id']} | {source.community_type} | {source.region} | "
+            f"{source.access_tier} | {source.transport} | "
             f"{item['successes']}/{item['observations']} | {outcomes} |"
         )
     lines.extend(
@@ -73,15 +77,16 @@ def _render_markdown(
             "",
             "## Observations",
             "",
-            "| run | source | kind | transport | outcome | HTTP | chars | attempts | ms | error |",
-            "|---:|---|---|---|---:|---:|---:|---:|---:|---|",
+            "| run | source | community | region | access | transport | outcome | HTTP | chars | attempts | ms | error |",
+            "|---:|---|---|---|---|---|---:|---:|---:|---:|---:|---|",
         ]
     )
     for item in results:
         status = str(item.status_code) if item.status_code is not None else "-"
         error = item.error.replace("|", "\\|").replace("\n", " ")[:160]
         lines.append(
-            f"| {item.run_index} | {item.source_id} | {item.kind} | {item.transport} | "
+            f"| {item.run_index} | {item.source_id} | {item.community_type} | "
+            f"{item.region} | {item.access_tier} | {item.transport} | "
             f"{item.outcome.value} | "
             f"{status} | {item.content_chars} | {item.attempts} | {item.elapsed_ms} | {error} |"
         )

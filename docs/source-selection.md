@@ -62,4 +62,4 @@
 | `invalid_content` | 有回應但缺必要詞、內容太短或拿到非預期頁面 |
 | `http_error` / `tls_error` / `timeout` / `error` | 其他傳輸或執行錯誤 |
 
-機器可讀報表 schema v2 同時提供 `by_transport`、`by_kind` 與 `source_stability`，用來判斷來源類型差異與重複觀察的一致性。
+機器可讀報表 schema v3 同時提供 `by_transport`、`by_kind`、`by_community_type`、`by_region`、`by_access_tier` 與 `source_stability`，用來判斷來源類型差異、存取層級與重複觀察的一致性。
