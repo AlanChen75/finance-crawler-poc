@@ -46,6 +46,13 @@ sources:
     url: https://mops.twse.com.tw/mops/#/web/index
     required_terms: [單一公司彙總報表, 重大訊息]
 
+  - id: mops_legacy_home
+    name: 公開資訊觀測站原版入口
+    topic: 上市櫃公司公告備援
+    transport: browser
+    url: https://mopsov.twse.com.tw/mops/web/index
+    required_terms: [公開資訊觀測站, 重大訊息]
+
   - id: ptt_stock
     name: PTT Stock 看板
     topic: 台股社群討論
