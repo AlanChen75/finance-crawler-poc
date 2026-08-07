@@ -53,6 +53,15 @@ sources:
     url: https://mopsov.twse.com.tw/mops/web/index
     required_terms: [公開資訊觀測站, 重大訊息]
 
+  - id: twse_openapi_material_information
+    name: TWSE OpenAPI 上市公司每日重大訊息
+    topic: 上市公司重大訊息機器介接
+    transport: json_api
+    url: https://openapi.twse.com.tw/v1/opendata/t187ap04_L
+    timeout_seconds: 120
+    min_content_chars: 1000
+    required_terms: [公司代號, 主旨, 說明]
+
   - id: ptt_stock
     name: PTT Stock 看板
     topic: 台股社群討論
