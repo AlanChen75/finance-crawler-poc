@@ -13,6 +13,19 @@ from finance_crawler_poc.models import Manifest, Source
 
 
 ALLOWED_TRANSPORTS = frozenset({"browser", "json_api", "rss"})
+ALLOWED_KINDS = frozenset(
+    {
+        "aggregator",
+        "community",
+        "developer_community",
+        "market_data",
+        "news",
+        "official_data",
+        "official_news",
+        "other",
+        "reference",
+    }
+)
 SOURCE_ID_PATTERN = re.compile(r"^[a-z][a-z0-9_]{1,63}$")
 BASE_DEFAULTS: Mapping[str, int] = {
     "timeout_seconds": 40,
@@ -96,6 +109,19 @@ def _parse_source(item: Mapping[str, Any], index: int) -> Source:
     provenance = item.get("provenance", "curated")
     if not isinstance(provenance, str) or not provenance.strip():
         raise ManifestError(f"source {values['id']} provenance must be a string")
+    kind = item.get("kind", "other")
+    if not isinstance(kind, str) or kind not in ALLOWED_KINDS:
+        raise ManifestError(f"source {values['id']} kind must be one of {sorted(ALLOWED_KINDS)}")
+    selection_evidence = item.get("selection_evidence", "")
+    if not isinstance(selection_evidence, str):
+        raise ManifestError(f"source {values['id']} selection_evidence must be a string")
+    if selection_evidence:
+        try:
+            _validate_public_http_url(selection_evidence, values["id"])
+        except ManifestError as exc:
+            raise ManifestError(
+                f"source {values['id']} selection_evidence must use a public http or https URL"
+            ) from exc
 
     return Source(
         id=values["id"],
@@ -110,6 +136,8 @@ def _parse_source(item: Mapping[str, Any], index: int) -> Source:
         enabled=enabled,
         disabled_reason=disabled_reason.strip(),
         provenance=provenance.strip(),
+        kind=kind,
+        selection_evidence=selection_evidence.strip(),
     )
 
 

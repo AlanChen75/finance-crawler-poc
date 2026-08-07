@@ -8,6 +8,9 @@ from finance_crawler_poc.models import Outcome
     ("status_code", "error", "content", "expected"),
     [
         (429, "", "", Outcome.RATE_LIMITED),
+        (401, "authentication required", "", Outcome.AUTH_REQUIRED),
+        (400, "", "Variable api_key has not been set", Outcome.AUTH_REQUIRED),
+        (200, "", "The parameter apikey is invalid or missing", Outcome.AUTH_REQUIRED),
         (403, "", "Access denied", Outcome.BLOCKED),
         (200, "", "Cloudflare CAPTCHA challenge", Outcome.BLOCKED),
         (

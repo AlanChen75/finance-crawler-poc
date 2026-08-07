@@ -1,6 +1,8 @@
 import asyncio
 from pathlib import Path
 
+import pytest
+
 from finance_crawler_poc import cli
 from finance_crawler_poc.models import Manifest, Outcome, ProbeResult, Source
 
@@ -47,9 +49,12 @@ def test_run_routes_all_transports_and_closes_adapters(monkeypatch, tmp_path: Pa
     )
     captured: dict[str, object] = {}
 
-    async def fake_probe(source: Source, adapter: FakeAdapter) -> ProbeResult:
-        captured[source.id] = adapter
-        return probe_result(source)
+    async def fake_probe(
+        source: Source, adapter: FakeAdapter, *, run_index: int
+    ) -> ProbeResult:
+        captured.setdefault(source.id, adapter)
+        base = probe_result(source)
+        return ProbeResult(**{**base.to_dict(), "outcome": Outcome.SUCCESS, "run_index": run_index})
 
     def fake_write(results, output, *, generated_at):
         captured["results"] = results
@@ -67,12 +72,18 @@ def test_run_routes_all_transports_and_closes_adapters(monkeypatch, tmp_path: Pa
     monkeypatch.setattr(cli, "write_reports", fake_write)
     monkeypatch.setattr(cli.asyncio, "sleep", no_sleep)
 
-    results = asyncio.run(cli.run(Path("sources.yaml"), tmp_path))
+    results = asyncio.run(cli.run(Path("sources.yaml"), tmp_path, repetitions=2))
 
-    assert [item.source_id for item in results] == [source.id for source in sources]
+    assert [item.source_id for item in results] == [source.id for source in sources] * 2
+    assert [item.run_index for item in results] == [1, 1, 1, 2, 2, 2]
     assert captured["output"] == tmp_path
     assert str(captured["generated_at"]).endswith("Z")
     assert len(FakeAdapter.instances) == 2
     assert all(adapter.closed for adapter in FakeAdapter.instances)
     assert captured["source_json_api"] is captured["source_rss"]
     assert captured["source_browser"] is not captured["source_json_api"]
+
+
+def test_run_rejects_repetitions_outside_bounded_range(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="repetitions"):
+        asyncio.run(cli.run(Path("sources.yaml"), tmp_path, repetitions=4))

@@ -2,6 +2,16 @@ name: Crawl capability probe
 
 on:
   workflow_dispatch:
+    inputs:
+      repetitions:
+        description: Number of observations per source
+        required: true
+        default: "2"
+        type: choice
+        options:
+          - "1"
+          - "2"
+          - "3"
 
 permissions:
   contents: read
@@ -34,7 +44,11 @@ jobs:
         run: python -m pytest --cov=finance_crawler_poc --cov-report=term-missing --cov-fail-under=80
 
       - name: Probe source matrix
-        run: python -m finance_crawler_poc --manifest sources.yaml --output artifacts
+        run: >-
+          python -m finance_crawler_poc
+          --manifest sources.yaml
+          --output artifacts
+          --repeat "${{ inputs.repetitions }}"
 
       - name: Add report to job summary
         if: always() && hashFiles('artifacts/report.md') != ''

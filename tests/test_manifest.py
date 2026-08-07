@@ -24,8 +24,10 @@ sources:
   - id: api
     name: API
     topic: prices
+    kind: official_data
     transport: json_api
     url: https://example.com/data.json
+    selection_evidence: https://example.com/docs
     required_terms: [price]
   - id: sec
     name: SEC
@@ -43,6 +45,8 @@ sources:
     assert manifest.sources[0].timeout_seconds == 12
     assert manifest.sources[0].retries == 2
     assert manifest.sources[0].min_content_chars == 50
+    assert manifest.sources[0].kind == "official_data"
+    assert manifest.sources[0].selection_evidence == "https://example.com/docs"
     assert manifest.sources[1].enabled is False
     assert manifest.sources[1].disabled_reason == "contact identity required"
 
@@ -98,6 +102,22 @@ sources:
   - {id: credentials, name: Bad, topic: x, transport: browser, url: https://user:pass@example.com}
 """,
             "credentials",
+        ),
+        (
+            """
+version: 1
+sources:
+  - {id: bad_kind, name: Bad, topic: x, kind: influencer, transport: browser, url: https://example.com}
+""",
+            "kind",
+        ),
+        (
+            """
+version: 1
+sources:
+  - {id: bad_evidence, name: Bad, topic: x, transport: browser, url: https://example.com, selection_evidence: file:///tmp/note}
+""",
+            "selection_evidence",
         ),
     ],
 )

@@ -7,6 +7,7 @@ from typing import Any
 
 class Outcome(str, Enum):
     SUCCESS = "success"
+    AUTH_REQUIRED = "auth_required"
     BLOCKED = "blocked"
     RATE_LIMITED = "rate_limited"
     TLS_ERROR = "tls_error"
@@ -32,6 +33,8 @@ class Source:
     enabled: bool = True
     disabled_reason: str = ""
     provenance: str = "curated"
+    kind: str = "other"
+    selection_evidence: str = ""
 
 
 @dataclass(frozen=True)
@@ -62,6 +65,10 @@ class ProbeResult:
     content_sha256: str
     preview: str
     error: str
+    kind: str = "other"
+    provenance: str = "curated"
+    selection_evidence: str = ""
+    run_index: int = 1
 
     def to_dict(self) -> dict[str, Any]:
         payload = asdict(self)

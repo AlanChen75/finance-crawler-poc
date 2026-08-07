@@ -23,6 +23,7 @@ async def probe_source(
     adapter: Adapter,
     *,
     sleep: Sleep = asyncio.sleep,
+    run_index: int = 1,
 ) -> ProbeResult:
     started = time.perf_counter()
     if not source.enabled:
@@ -32,6 +33,7 @@ async def probe_source(
             attempts=0,
             elapsed_ms=_elapsed_ms(started),
             error=source.disabled_reason,
+            run_index=run_index,
         )
 
     last_result: ProbeResult | None = None
@@ -47,9 +49,10 @@ async def probe_source(
                 attempts=attempt,
                 elapsed_ms=_elapsed_ms(started),
                 error=error,
+                run_index=run_index,
             )
         else:
-            last_result = _evaluate_response(source, response, attempt, started)
+            last_result = _evaluate_response(source, response, attempt, started, run_index)
 
         if last_result.outcome is Outcome.SUCCESS:
             return last_result
@@ -67,6 +70,7 @@ def _evaluate_response(
     response: FetchResponse,
     attempt: int,
     started: float,
+    run_index: int,
 ) -> ProbeResult:
     if response.error or response.status_code is None or not 200 <= response.status_code < 400:
         outcome = classify_failure(
@@ -82,22 +86,29 @@ def _evaluate_response(
             elapsed_ms=_elapsed_ms(started),
             content=response.content,
             error=response.error or f"HTTP {response.status_code}",
+            run_index=run_index,
         )
 
-    blocked_outcome = classify_failure(
+    barrier_outcome = classify_failure(
         status_code=response.status_code,
         error="",
         content=response.content[:5_000],
     )
-    if blocked_outcome is Outcome.BLOCKED:
+    if barrier_outcome in {Outcome.AUTH_REQUIRED, Outcome.BLOCKED, Outcome.ROBOTS_DENIED}:
+        barrier_errors = {
+            Outcome.AUTH_REQUIRED: "authentication requirement found in response",
+            Outcome.BLOCKED: "anti-bot marker found in content",
+            Outcome.ROBOTS_DENIED: "robots denial found in response",
+        }
         return _result(
             source,
-            outcome=Outcome.BLOCKED,
+            outcome=barrier_outcome,
             status_code=response.status_code,
             attempts=attempt,
             elapsed_ms=_elapsed_ms(started),
             content=response.content,
-            error="anti-bot marker found in content",
+            error=barrier_errors[barrier_outcome],
+            run_index=run_index,
         )
 
     lowered_content = response.content.casefold()
@@ -111,6 +122,7 @@ def _evaluate_response(
             elapsed_ms=_elapsed_ms(started),
             content=response.content,
             error=f"required term missing: {', '.join(missing_terms)}",
+            run_index=run_index,
         )
     if len(response.content) < source.min_content_chars:
         return _result(
@@ -124,6 +136,7 @@ def _evaluate_response(
                 f"content shorter than minimum: {len(response.content)} "
                 f"< {source.min_content_chars}"
             ),
+            run_index=run_index,
         )
 
     return _result(
@@ -133,6 +146,7 @@ def _evaluate_response(
         attempts=attempt,
         elapsed_ms=_elapsed_ms(started),
         content=response.content,
+        run_index=run_index,
     )
 
 
@@ -145,6 +159,7 @@ def _result(
     status_code: int | None = None,
     content: str = "",
     error: str = "",
+    run_index: int = 1,
 ) -> ProbeResult:
     normalized_preview = " ".join(content.split())[:500]
     return ProbeResult(
@@ -161,6 +176,10 @@ def _result(
         content_sha256=hashlib.sha256(content.encode("utf-8")).hexdigest() if content else "",
         preview=normalized_preview,
         error=error,
+        kind=source.kind,
+        provenance=source.provenance,
+        selection_evidence=source.selection_evidence,
+        run_index=run_index,
     )
 
 
