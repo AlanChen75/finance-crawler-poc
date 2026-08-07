@@ -27,6 +27,7 @@ AUTH_MARKERS = (
     "parameter apikey is invalid or missing",
     "invalid api key",
     "api key not valid",
+    "please use api key",
     "missing api key",
     "api key required",
     "requires an api key",

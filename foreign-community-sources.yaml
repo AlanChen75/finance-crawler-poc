@@ -361,7 +361,7 @@ sources:
     transport: browser
     selection_evidence: https://www.etoro.com/discover/people
     url: https://www.etoro.com/discover/people
-    required_terms: [eToro, Investors]
+    required_terms: [eToro, CopyTrader]
 
   - id: x_finance_search_web
     name: X Finance Search Web
