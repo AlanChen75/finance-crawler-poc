@@ -24,9 +24,15 @@ sources:
   - id: api
     name: API
     topic: prices
+    kind: official_data
+    community_type: quantitative
+    region: global
+    access_tier: public_api
     transport: json_api
     url: https://example.com/data.json
+    selection_evidence: https://example.com/docs
     required_terms: [price]
+    route_group: example_market
   - id: sec
     name: SEC
     topic: filings
@@ -43,8 +49,18 @@ sources:
     assert manifest.sources[0].timeout_seconds == 12
     assert manifest.sources[0].retries == 2
     assert manifest.sources[0].min_content_chars == 50
+    assert manifest.sources[0].kind == "official_data"
+    assert manifest.sources[0].community_type == "quantitative"
+    assert manifest.sources[0].region == "global"
+    assert manifest.sources[0].access_tier == "public_api"
+    assert manifest.sources[0].selection_evidence == "https://example.com/docs"
+    assert manifest.sources[0].route_group == "example_market"
+    assert manifest.sources[1].route_group == "sec"
     assert manifest.sources[1].enabled is False
     assert manifest.sources[1].disabled_reason == "contact identity required"
+    assert manifest.sources[1].community_type == "not_applicable"
+    assert manifest.sources[1].region == "global"
+    assert manifest.sources[1].access_tier == "public_web"
 
 
 @pytest.mark.parametrize(
@@ -98,6 +114,70 @@ sources:
   - {id: credentials, name: Bad, topic: x, transport: browser, url: https://user:pass@example.com}
 """,
             "credentials",
+        ),
+        (
+            """
+version: 1
+sources:
+  - {id: bad_kind, name: Bad, topic: x, kind: influencer, transport: browser, url: https://example.com}
+""",
+            "kind",
+        ),
+        (
+            """
+version: 1
+sources:
+  - {id: bad_evidence, name: Bad, topic: x, transport: browser, url: https://example.com, selection_evidence: file:///tmp/note}
+""",
+            "selection_evidence",
+        ),
+        (
+            """
+version: 1
+sources:
+  - {id: bad_community_type, name: Bad, topic: x, transport: browser, url: https://example.com, community_type: meme_only}
+""",
+            "community_type",
+        ),
+        (
+            """
+version: 1
+sources:
+  - {id: bad_access, name: Bad, topic: x, transport: browser, url: https://example.com, access_tier: bypass_paywall}
+""",
+            "access_tier",
+        ),
+        (
+            """
+version: 1
+sources:
+  - {id: bad_region, name: Bad, topic: x, transport: browser, url: https://example.com, region: ../private}
+""",
+            "region",
+        ),
+        (
+            """
+version: 1
+sources:
+  - {id: bad_group, name: Bad, topic: x, transport: browser, url: https://example.com, route_group: ../bad}
+""",
+            "route_group",
+        ),
+        (
+            """
+version: 1
+sources:
+  - {id: bad_relay, name: Bad, topic: x, transport: rss, url: https://example.com/feed, relay_path: https://evil.example/proxy}
+""",
+            "relay_path",
+        ),
+        (
+            """
+version: 1
+sources:
+  - {id: browser_relay, name: Bad, topic: x, transport: browser, url: https://example.com, relay_path: /v1/feed/browser_relay}
+""",
+            "relay_path",
         ),
     ],
 )

@@ -2,6 +2,24 @@ name: Crawl capability probe
 
 on:
   workflow_dispatch:
+    inputs:
+      scope:
+        description: Source matrix to probe
+        required: true
+        default: core
+        type: choice
+        options:
+          - core
+          - foreign_communities
+      repetitions:
+        description: Same-job burst observations per source (not longitudinal stability)
+        required: true
+        default: "1"
+        type: choice
+        options:
+          - "1"
+          - "2"
+          - "3"
 
 permissions:
   contents: read
@@ -31,10 +49,27 @@ jobs:
         run: python -m playwright install --with-deps chromium
 
       - name: Run contract tests
-        run: python -m pytest --cov=finance_crawler_poc --cov-report=term-missing --cov-fail-under=80
+        run: |
+          python -m pytest --cov=finance_crawler_poc --cov-report=term-missing --cov-fail-under=80
+          node --test worker/test/index.test.mjs
+
+      - name: Select bounded source manifest
+        run: |
+          case "${{ inputs.scope }}" in
+            core) manifest="sources.yaml" ;;
+            foreign_communities) manifest="foreign-community-sources.yaml" ;;
+            *) echo "unsupported scope" >&2; exit 2 ;;
+          esac
+          echo "PROBE_MANIFEST=$manifest" >> "$GITHUB_ENV"
 
       - name: Probe source matrix
-        run: python -m finance_crawler_poc --manifest sources.yaml --output artifacts
+        env:
+          CF_RELAY_BASE_URL: ${{ vars.CF_RELAY_BASE_URL }}
+        run: >-
+          python -m finance_crawler_poc
+          --manifest "$PROBE_MANIFEST"
+          --output artifacts
+          --repeat "${{ inputs.repetitions }}"
 
       - name: Add report to job summary
         if: always() && hashFiles('artifacts/report.md') != ''
@@ -44,7 +79,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: finance-crawler-capability-report
+          name: finance-crawler-capability-report-${{ inputs.scope }}
           path: artifacts/
           if-no-files-found: warn
           retention-days: 30
