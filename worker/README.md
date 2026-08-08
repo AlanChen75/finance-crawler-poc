@@ -1,6 +1,6 @@
 # Fixed feed relay
 
-This Worker is an egress fallback for six explicit RSS/Atom endpoints. It is intentionally not a general proxy.
+This Worker is an egress fallback for seven explicit RSS/Atom endpoints. It is intentionally not a general proxy.
 
 ```bash
 npm install

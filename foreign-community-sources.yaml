@@ -796,6 +796,21 @@ sources:
     relay_path: /v1/feed/bogleheads_forum_feed
     required_terms: [feed, entry]
 
+  - id: financial_wisdom_forum_feed
+    name: Financial Wisdom Forum Atom
+    topic: Canadian personal finance and investing discussions
+    kind: community
+    community_type: personal_finance
+    region: CA
+    access_tier: public_feed
+    route_group: financial_wisdom_forum
+    transport: rss
+    provenance: public phpBB Atom feed discovered and verified 2026-08-08
+    selection_evidence: https://www.financialwisdomforum.org/
+    url: https://www.financialwisdomforum.org/forum/app.php/feed
+    relay_path: /v1/feed/financial_wisdom_forum_feed
+    required_terms: [feed, entry]
+
   - id: moneysavingexpert_savings_feed
     name: MoneySavingExpert Savings Feed
     topic: 英國儲蓄投資分類 feed

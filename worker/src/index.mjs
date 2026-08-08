@@ -12,6 +12,9 @@ export const TARGETS = Object.freeze({
   bogleheads_forum_feed: Object.freeze({
     url: "https://www.bogleheads.org/forum/app.php/feed",
   }),
+  financial_wisdom_forum_feed: Object.freeze({
+    url: "https://www.financialwisdomforum.org/forum/app.php/feed",
+  }),
   money_stackexchange_feed: Object.freeze({
     url: "https://money.stackexchange.com/feeds",
   }),

@@ -6,9 +6,9 @@
 
 網路上不存在可證明封閉的「所有財經社群」名單。本專案把全面定義為：覆蓋所有主流資料取得形態、主要財經討論族群與代表性區域市場，並把無法匿名取得的主流平台保留在 catalog，而不是假裝不存在。
 
-`foreign-community-sources.yaml` 目前包含 85 條獨立來源路徑：69 條可由 GitHub Actions 在無憑證狀態下探測、16 條 catalog-only。可跑路徑分為 38 條 browser、18 條 JSON API、13 條 RSS/Atom；其中真正的公開分母是 38 條 public web、14 條 public API 與 13 條 public feed，另有 4 條是無憑證認證邊界探測。
+`foreign-community-sources.yaml` 目前包含 86 條獨立來源路徑：70 條可由 GitHub Actions 在無憑證狀態下探測、16 條 catalog-only。可跑路徑分為 38 條 browser、18 條 JSON API、14 條 RSS/Atom；其中真正的公開分母是 38 條 public web、14 條 public API 與 14 條 public feed，另有 4 條是無憑證認證邊界探測。
 
-這不是「85 個互不重複網站」：公開路徑透過 `route_group` 合併為 47 個可解析社群／開源生態，其餘是認證或會員邊界。Reddit 的不同 subreddit、Telegram 頻道、Discord server 與 Facebook group 數量會持續變動，因此 catalog 以平台與代表性財經入口為單位。
+這不是「86 個互不重複網站」：公開路徑透過 `route_group` 合併為 47 個可解析社群／開源生態，其餘是認證或會員邊界。Reddit 的不同 subreddit、Telegram 頻道、Discord server 與 Facebook group 數量會持續變動，因此 catalog 以平台與代表性財經入口為單位。
 
 ## 涵蓋的討論類型
 
@@ -60,12 +60,12 @@
 | Rational Reminder | 會員 | 會員 | 會員 |
 | Ethereum Research／Magicians | — | ✓ | ✓ |
 | XenForo：Elite Trader／Trade2Win／Aussie Stock Forums | ✓ | — | ✓ |
-| Bogleheads／MoneySavingExpert | ✓ | — | ✓（邊界探測） |
+| Bogleheads／MoneySavingExpert／Financial Wisdom | ✓ | — | ✓（含邊界探測） |
 | Reddit | ✓ | 匿名 JSON 邊界＋OAuth catalog | — |
 
 若 HTML 被 Cloudflare、Akamai 或 robots 擋住但官方 JSON/feed 通過，分層策略成立；若三條路徑都拒絕，則必須取得正式授權或放棄該來源，不能靠更激進的 browser 偽裝。
 
-Cloudflare relay 不是通用 proxy：只允許 manifest 內六個 feed ID、不接受 URL 參數、不追隨重導、宣告超過 2 MB 的回應會 fail closed。這是用不同合法出口排除 GitHub Runner IP/CDN 差異，不是繞過會員、驗證或 robots 邊界。
+Cloudflare relay 不是通用 proxy：只允許 manifest 內七個 feed ID、不接受 URL 參數、不追隨重導、宣告超過 2 MB 的回應會 fail closed。這是用不同合法出口排除 GitHub Runner IP/CDN 差異，不是繞過會員、驗證或 robots 邊界。
 
 ## 認證與合規邊界
 
@@ -83,11 +83,11 @@ Rational Reminder 目前將社群首頁與 RSS 重導到 `/login`，`latest.json
 
 舊報表的 50%、59% 與 87.5% 不是同一層級的系統可行率，不得並列解讀：
 
-- RSS 50% 是舊 GitHub job 中 7/14 條直連路徑兩次都成功；分母還錯把已轉為登入制的 Rational Reminder 算成 public feed。更正後公開分母是 13。
+- RSS 50% 是舊 GitHub job 中 7/14 條直連路徑兩次都成功；分母還錯把已轉為登入制的 Rational Reminder 算成 public feed。移除該會員來源後分母是 13；新增並驗證 Financial Wisdom Forum 公開 Atom 後，現行分母為 14。
 - Browser 59% 是 23/39 條在同一 job 兩次都成功；不是可抓率。兩個獨立 Actions run 的首抓結果其實都是 28/39（71.8%），且 39/39 的首抓分類在兩次 run 一致。Rational Reminder 將移出公開分母後，必須以新 Actions run 重算。
 - Public API 87.5% 是 14/16；兩個失敗端點中，Rational Reminder 是會員限制，Bluesky `searchPosts` 的官方 lexicon 明寫服務提供者可要求認證。兩者都不應留在 public API 分母，更正後是 14/14。
 
-Staging Worker 實測六條備援：Stack Exchange 的 Money、Bitcoin、Quant 三條與 Aussie Stock Forums 均回傳 HTTP 200 且為合法 Atom/RSS XML；Bogleheads 與 Mr. Money Mustache 在 Cloudflare 出口仍為 HTTP 403 challenge。因此當前可驗證的 RSS 分層取得是 11/13（84.6%），不是 50%。GitHub-hosted runner 仍要用新 schema v4 workflow 完成最後端對端驗收。
+GitHub Actions run `31230937472` 已實測六條備援：Stack Exchange 的 Money、Bitcoin、Quant 三條與 Aussie Stock Forums 由 relay 回傳合法 Atom/RSS XML；Bogleheads 與 Mr. Money Mustache 在 Cloudflare 出口仍為 HTTP 403 challenge。該版 RSS 分層取得為 11/13（84.6%），不是 50%。其後新增的 Financial Wisdom Forum 已在直連與 staging Worker 驗得 HTTP 200、合法 Atom；現行 14 條分母仍以新 Actions run 作最後端對端驗收。
 
 依據：[Bluesky `searchPosts` lexicon](https://raw.githubusercontent.com/bluesky-social/atproto/main/lexicons/app/bsky/feed/searchPosts.json)、[Stack Exchange API 匿名限制](https://api.stackexchange.com/docs)、[Cloudflare Workers 錯誤索引](https://developers.cloudflare.com/workers/observability/errors/)、[Crawl4AI CrawlResult 重導欄位](https://docs.crawl4ai.com/api/crawl-result/)。
 
@@ -100,8 +100,8 @@ Staging Worker 實測六條備援：Stack Exchange 的 Money、Bitcoin、Quant �
 - 來源間隔 1 秒；
 - 預設一輪；手動要求 2–3 輪時只解讀為 burst repeatability；
 - browser 一律檢查 robots.txt；
-- 每輪都必須為 85 條來源產生結果，停用項目也必須明確記錄。
+- 每輪都必須為 86 條來源產生結果，停用項目也必須明確記錄。
 
-預設一輪應產生 85 筆結果，其中 69 筆為實際無憑證探測、16 筆為明確停用紀錄。理論最壞探測時間約 24.2 分鐘，再加環境安裝仍應落在 workflow 的 60 分鐘上限內；實際值必須由 Actions run 量測，不能用此上限當成效能結果。
+預設一輪應產生 86 筆結果，其中 70 筆為實際無憑證探測、16 筆為明確停用紀錄。理論最壞探測時間約 24.5 分鐘，再加環境安裝仍應落在 workflow 的 60 分鐘上限內；實際值必須由 Actions run 量測，不能用此上限當成效能結果。
 
 報表 schema v4 必須提供：`by_transport`、`by_kind`、`by_community_type`、`by_region`、`by_access_tier`、`direct_first_pass`、`resolved_first_pass`、`community_resolution` 與 `path_repeatability`。`success` 只代表該公開入口通過當時的 transport、最低長度與必要詞契約，不代表可完整回溯歷史、取得留言、合法再發布或內容可信。

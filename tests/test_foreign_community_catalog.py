@@ -11,6 +11,7 @@ REQUIRED_FLAGSHIPS = {
     "bogleheads_personal_investments",
     "ethereum_research_json",
     "financial_wisdom_forum",
+    "financial_wisdom_forum_feed",
     "github_freqtrade_issues",
     "hotcopper_home",
     "investorshub_most_read",
@@ -63,4 +64,15 @@ def test_disabled_catalog_entries_explain_the_authorization_boundary() -> None:
     assert all(
         source.access_tier in {"commercial_api", "credentialed_api", "member_only"}
         for source in disabled
+    )
+
+
+def test_financial_wisdom_browser_and_feed_share_a_fallback_group() -> None:
+    manifest = load_manifest(CATALOG_PATH)
+    sources = {source.id: source for source in manifest.sources}
+
+    assert sources["financial_wisdom_forum"].route_group == "financial_wisdom_forum"
+    assert sources["financial_wisdom_forum_feed"].route_group == "financial_wisdom_forum"
+    assert sources["financial_wisdom_forum_feed"].relay_path.endswith(
+        "/financial_wisdom_forum_feed"
     )
