@@ -84,10 +84,10 @@ Rational Reminder 目前將社群首頁與 RSS 重導到 `/login`，`latest.json
 舊報表的 50%、59% 與 87.5% 不是同一層級的系統可行率，不得並列解讀：
 
 - RSS 50% 是舊 GitHub job 中 7/14 條直連路徑兩次都成功；分母還錯把已轉為登入制的 Rational Reminder 算成 public feed。移除該會員來源後分母是 13；新增並驗證 Financial Wisdom Forum 公開 Atom 後，現行分母為 14。
-- Browser 59% 是 23/39 條在同一 job 兩次都成功；不是可抓率。兩個獨立 Actions run 的首抓結果其實都是 28/39（71.8%），且 39/39 的首抓分類在兩次 run 一致。Rational Reminder 將移出公開分母後，必須以新 Actions run 重算。
+- Browser 59% 是 23/39 條在同一 job 兩次都成功；不是可抓率。兩個舊 Actions run 的首抓結果都是 28/39（71.8%）；現行單輪契約移除登入制 Rational Reminder 後，實測為 26/38（68.4%）。失敗分為 4 條 robots 明確拒絕與 8 條 anti-bot／CDN 403，不能以重試或偽裝灌高成功率。
 - Public API 87.5% 是 14/16；兩個失敗端點中，Rational Reminder 是會員限制，Bluesky `searchPosts` 的官方 lexicon 明寫服務提供者可要求認證。兩者都不應留在 public API 分母，更正後是 14/14。
 
-GitHub Actions run `31230937472` 已實測六條備援：Stack Exchange 的 Money、Bitcoin、Quant 三條與 Aussie Stock Forums 由 relay 回傳合法 Atom/RSS XML；Bogleheads 與 Mr. Money Mustache 在 Cloudflare 出口仍為 HTTP 403 challenge。該版 RSS 分層取得為 11/13（84.6%），不是 50%。其後新增的 Financial Wisdom Forum 已在直連與 staging Worker 驗得 HTTP 200、合法 Atom；現行 14 條分母仍以新 Actions run 作最後端對端驗收。
+[GitHub Actions run 31231582994](https://github.com/AlanChen75/finance-crawler-poc/actions/runs/31231582994) 在 commit `df7cd01` 完成最終單輪驗收：公開 API 14/14（100%）；RSS 直連 8/14（57.1%），經固定 Cloudflare relay 恢復四條後為 12/14（85.7%）；Browser 26/38（68.4%）；整體公開路徑由直連 48/66（72.7%）提升至分層解析 52/66（78.8%）。47 個公開 `route_group` 中有 37 個至少一條路徑成功（78.7%）。Financial Wisdom Forum 的 Browser 在 GitHub 出口為 403，但 Atom 直連為 200，驗證了同社群多路徑降級；Bogleheads 與 Mr. Money Mustache 的 feed 在 GitHub 與 Cloudflare 出口都為 403，保留為真實邊界。
 
 依據：[Bluesky `searchPosts` lexicon](https://raw.githubusercontent.com/bluesky-social/atproto/main/lexicons/app/bsky/feed/searchPosts.json)、[Stack Exchange API 匿名限制](https://api.stackexchange.com/docs)、[Cloudflare Workers 錯誤索引](https://developers.cloudflare.com/workers/observability/errors/)、[Crawl4AI CrawlResult 重導欄位](https://docs.crawl4ai.com/api/crawl-result/)。
 
@@ -102,6 +102,6 @@ GitHub Actions run `31230937472` 已實測六條備援：Stack Exchange 的 Mone
 - browser 一律檢查 robots.txt；
 - 每輪都必須為 86 條來源產生結果，停用項目也必須明確記錄。
 
-預設一輪應產生 86 筆結果，其中 70 筆為實際無憑證探測、16 筆為明確停用紀錄。理論最壞探測時間約 24.5 分鐘，再加環境安裝仍應落在 workflow 的 60 分鐘上限內；實際值必須由 Actions run 量測，不能用此上限當成效能結果。
+預設一輪應產生 86 筆結果，其中 70 筆為實際無憑證探測、16 筆為明確停用紀錄。理論最壞探測時間約 24.5 分鐘，再加環境安裝仍應落在 workflow 的 60 分鐘上限內；run `31231582994` 的探測步驟實際為 3 分 4 秒，整個 job 為 4 分 37 秒。
 
 報表 schema v4 必須提供：`by_transport`、`by_kind`、`by_community_type`、`by_region`、`by_access_tier`、`direct_first_pass`、`resolved_first_pass`、`community_resolution` 與 `path_repeatability`。`success` 只代表該公開入口通過當時的 transport、最低長度與必要詞契約，不代表可完整回溯歷史、取得留言、合法再發布或內容可信。
