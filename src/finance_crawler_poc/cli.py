@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import os
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -27,7 +28,7 @@ async def run(
     if repetitions not in {1, 2, 3}:
         raise ValueError("repetitions must be between 1 and 3")
     manifest = load_manifest(manifest_path)
-    http_adapter = HttpAdapter()
+    http_adapter = HttpAdapter(relay_base_url=os.environ.get("CF_RELAY_BASE_URL"))
     browser_adapter = Crawl4AIAdapter()
     adapters = {
         "json_api": http_adapter,

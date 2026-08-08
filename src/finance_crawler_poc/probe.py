@@ -5,9 +5,17 @@ import hashlib
 import time
 from collections.abc import Awaitable, Callable
 from typing import Protocol
+from urllib.parse import urlparse
 
 from finance_crawler_poc.classification import classify_failure
-from finance_crawler_poc.models import FetchResponse, Outcome, ProbeResult, Source
+from finance_crawler_poc.models import (
+    DeliveryAttempt,
+    FetchResponse,
+    FetchSnapshot,
+    Outcome,
+    ProbeResult,
+    Source,
+)
 
 
 class Adapter(Protocol):
@@ -72,22 +80,40 @@ def _evaluate_response(
     started: float,
     run_index: int,
 ) -> ProbeResult:
+    outcome, error = _response_outcome(source, response)
+    delivery_attempts = tuple(
+        [
+            _delivery_attempt(source, prior)
+            for prior in response.prior_attempts
+        ]
+        + [_delivery_attempt(source, response)]
+    )
+    return _result(
+        source,
+        outcome=outcome,
+        status_code=response.status_code,
+        attempts=attempt,
+        elapsed_ms=_elapsed_ms(started),
+        content=response.content,
+        error=error,
+        run_index=run_index,
+        final_url=response.final_url,
+        delivery_attempts=delivery_attempts,
+    )
+
+
+def _response_outcome(
+    source: Source, response: FetchResponse | FetchSnapshot
+) -> tuple[Outcome, str]:
+    if _is_auth_redirect(source.url, response.final_url):
+        return Outcome.AUTH_REQUIRED, "authentication redirect detected"
     if response.error or response.status_code is None or not 200 <= response.status_code < 400:
         outcome = classify_failure(
             status_code=response.status_code,
             error=response.error,
             content=response.content,
         )
-        return _result(
-            source,
-            outcome=outcome,
-            status_code=response.status_code,
-            attempts=attempt,
-            elapsed_ms=_elapsed_ms(started),
-            content=response.content,
-            error=response.error or f"HTTP {response.status_code}",
-            run_index=run_index,
-        )
+        return outcome, response.error or f"HTTP {response.status_code}"
 
     barrier_outcome = classify_failure(
         status_code=response.status_code,
@@ -100,54 +126,45 @@ def _evaluate_response(
             Outcome.BLOCKED: "anti-bot marker found in content",
             Outcome.ROBOTS_DENIED: "robots denial found in response",
         }
-        return _result(
-            source,
-            outcome=barrier_outcome,
-            status_code=response.status_code,
-            attempts=attempt,
-            elapsed_ms=_elapsed_ms(started),
-            content=response.content,
-            error=barrier_errors[barrier_outcome],
-            run_index=run_index,
-        )
+        return barrier_outcome, barrier_errors[barrier_outcome]
 
     lowered_content = response.content.casefold()
     missing_terms = [term for term in source.required_terms if term.casefold() not in lowered_content]
     if missing_terms:
-        return _result(
-            source,
-            outcome=Outcome.INVALID_CONTENT,
-            status_code=response.status_code,
-            attempts=attempt,
-            elapsed_ms=_elapsed_ms(started),
-            content=response.content,
-            error=f"required term missing: {', '.join(missing_terms)}",
-            run_index=run_index,
-        )
+        return Outcome.INVALID_CONTENT, f"required term missing: {', '.join(missing_terms)}"
     if len(response.content) < source.min_content_chars:
-        return _result(
-            source,
-            outcome=Outcome.INVALID_CONTENT,
-            status_code=response.status_code,
-            attempts=attempt,
-            elapsed_ms=_elapsed_ms(started),
-            content=response.content,
-            error=(
-                f"content shorter than minimum: {len(response.content)} "
-                f"< {source.min_content_chars}"
-            ),
-            run_index=run_index,
+        return Outcome.INVALID_CONTENT, (
+            f"content shorter than minimum: {len(response.content)} "
+            f"< {source.min_content_chars}"
         )
+    return Outcome.SUCCESS, ""
 
-    return _result(
-        source,
-        outcome=Outcome.SUCCESS,
+
+def _delivery_attempt(
+    source: Source, response: FetchResponse | FetchSnapshot
+) -> DeliveryAttempt:
+    outcome, error = _response_outcome(source, response)
+    content = response.content
+    return DeliveryAttempt(
+        route=response.route,
+        outcome=outcome,
         status_code=response.status_code,
-        attempts=attempt,
-        elapsed_ms=_elapsed_ms(started),
-        content=response.content,
-        run_index=run_index,
+        content_chars=len(content),
+        content_sha256=hashlib.sha256(content.encode("utf-8")).hexdigest() if content else "",
+        preview=" ".join(content.split())[:500],
+        error=error,
     )
+
+
+def _is_auth_redirect(source_url: str, final_url: str) -> bool:
+    if not final_url or final_url == source_url:
+        return False
+    source = urlparse(source_url)
+    final = urlparse(final_url)
+    if source.hostname != final.hostname:
+        return False
+    final_path = final.path.rstrip("/").casefold()
+    return final_path in {"/auth", "/login", "/sign-in", "/signin"}
 
 
 def _result(
@@ -160,6 +177,8 @@ def _result(
     content: str = "",
     error: str = "",
     run_index: int = 1,
+    final_url: str = "",
+    delivery_attempts: tuple[DeliveryAttempt, ...] = (),
 ) -> ProbeResult:
     normalized_preview = " ".join(content.split())[:500]
     return ProbeResult(
@@ -183,6 +202,9 @@ def _result(
         community_type=source.community_type,
         region=source.region,
         access_tier=source.access_tier,
+        route_group=source.route_group or source.id,
+        final_url=final_url,
+        delivery_attempts=delivery_attempts,
     )
 
 

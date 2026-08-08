@@ -169,6 +169,19 @@ def _parse_source(item: Mapping[str, Any], index: int) -> Source:
         raise ManifestError(
             f"source {values['id']} access_tier must be one of {sorted(ALLOWED_ACCESS_TIERS)}"
         )
+    route_group = item.get("route_group", values["id"])
+    if not isinstance(route_group, str) or not SOURCE_ID_PATTERN.fullmatch(route_group):
+        raise ManifestError(f"source {values['id']} route_group must be a valid source-style id")
+    relay_path = item.get("relay_path", "")
+    if not isinstance(relay_path, str):
+        raise ManifestError(f"source {values['id']} relay_path must be a string")
+    expected_relay_path = f"/v1/feed/{values['id']}"
+    if relay_path and (
+        values["transport"] != "rss" or relay_path != expected_relay_path
+    ):
+        raise ManifestError(
+            f"source {values['id']} relay_path must equal {expected_relay_path} for RSS sources"
+        )
 
     return Source(
         id=values["id"],
@@ -188,6 +201,8 @@ def _parse_source(item: Mapping[str, Any], index: int) -> Source:
         community_type=community_type,
         region=region,
         access_tier=access_tier,
+        route_group=route_group,
+        relay_path=relay_path,
     )
 
 

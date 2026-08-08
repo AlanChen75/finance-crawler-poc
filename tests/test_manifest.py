@@ -32,6 +32,7 @@ sources:
     url: https://example.com/data.json
     selection_evidence: https://example.com/docs
     required_terms: [price]
+    route_group: example_market
   - id: sec
     name: SEC
     topic: filings
@@ -53,6 +54,8 @@ sources:
     assert manifest.sources[0].region == "global"
     assert manifest.sources[0].access_tier == "public_api"
     assert manifest.sources[0].selection_evidence == "https://example.com/docs"
+    assert manifest.sources[0].route_group == "example_market"
+    assert manifest.sources[1].route_group == "sec"
     assert manifest.sources[1].enabled is False
     assert manifest.sources[1].disabled_reason == "contact identity required"
     assert manifest.sources[1].community_type == "not_applicable"
@@ -151,6 +154,30 @@ sources:
   - {id: bad_region, name: Bad, topic: x, transport: browser, url: https://example.com, region: ../private}
 """,
             "region",
+        ),
+        (
+            """
+version: 1
+sources:
+  - {id: bad_group, name: Bad, topic: x, transport: browser, url: https://example.com, route_group: ../bad}
+""",
+            "route_group",
+        ),
+        (
+            """
+version: 1
+sources:
+  - {id: bad_relay, name: Bad, topic: x, transport: rss, url: https://example.com/feed, relay_path: https://evil.example/proxy}
+""",
+            "relay_path",
+        ),
+        (
+            """
+version: 1
+sources:
+  - {id: browser_relay, name: Bad, topic: x, transport: browser, url: https://example.com, relay_path: /v1/feed/browser_relay}
+""",
+            "relay_path",
         ),
     ],
 )

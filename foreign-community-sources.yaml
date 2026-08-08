@@ -14,6 +14,7 @@ sources:
     community_type: personal_finance
     region: US
     access_tier: public_web
+    route_group: bogleheads
     transport: browser
     selection_evidence: https://www.bogleheads.org/forum/about
     url: https://www.bogleheads.org/forum/viewforum.php?f=1
@@ -35,6 +36,7 @@ sources:
     community_type: retail_investing
     region: US
     access_tier: public_web
+    route_group: reddit_investing
     transport: browser
     selection_evidence: https://redditinc.com/policies/data-api-terms
     url: https://www.reddit.com/r/investing/hot/
@@ -45,6 +47,7 @@ sources:
     topic: 量化金融專業問答公開頁
     community_type: quantitative
     access_tier: public_web
+    route_group: quant_stackexchange
     transport: browser
     selection_evidence: https://quant.stackexchange.com/questions?tab=Hot
     url: https://quant.stackexchange.com/questions?tab=Hot
@@ -88,6 +91,7 @@ sources:
     community_type: personal_finance
     region: UK
     access_tier: public_web
+    route_group: moneysavingexpert_savings
     transport: browser
     selection_evidence: https://forums.moneysavingexpert.com/categories/savings-investments
     url: https://forums.moneysavingexpert.com/categories/savings-investments
@@ -121,6 +125,7 @@ sources:
     community_type: active_trading
     region: US
     access_tier: public_web
+    route_group: elitetrader_forums
     transport: browser
     selection_evidence: https://www.elitetrader.com/et/forums/
     url: https://www.elitetrader.com/et/forums/
@@ -132,6 +137,7 @@ sources:
     community_type: active_trading
     region: UK
     access_tier: public_web
+    route_group: trade2win_forums
     transport: browser
     selection_evidence: https://www.trade2win.com/forums/
     url: https://www.trade2win.com/forums/
@@ -230,6 +236,7 @@ sources:
     community_type: active_trading
     region: IN
     access_tier: public_web
+    route_group: tradingqna
     transport: browser
     selection_evidence: https://tradingqna.com/
     url: https://tradingqna.com/
@@ -241,6 +248,7 @@ sources:
     community_type: value_investing
     region: IN
     access_tier: public_web
+    route_group: valuepickr
     transport: browser
     selection_evidence: https://forum.valuepickr.com/
     url: https://forum.valuepickr.com/
@@ -285,6 +293,7 @@ sources:
     community_type: active_trading
     region: AU
     access_tier: public_web
+    route_group: aussie_stock_forums
     transport: browser
     selection_evidence: https://www.aussiestockforums.com/forums/
     url: https://www.aussiestockforums.com/forums/
@@ -295,6 +304,7 @@ sources:
     topic: 個人理財專業問答公開頁
     community_type: personal_finance
     access_tier: public_web
+    route_group: money_stackexchange
     transport: browser
     selection_evidence: https://money.stackexchange.com/questions?tab=Hot
     url: https://money.stackexchange.com/questions?tab=Hot
@@ -305,6 +315,7 @@ sources:
     topic: 比特幣技術與經濟問答公開頁
     community_type: crypto
     access_tier: public_web
+    route_group: bitcoin_stackexchange
     transport: browser
     selection_evidence: https://bitcoin.stackexchange.com/questions?tab=Hot
     url: https://bitcoin.stackexchange.com/questions?tab=Hot
@@ -368,6 +379,7 @@ sources:
     topic: 公開金融關鍵字搜尋頁邊界
     community_type: social_investing
     access_tier: public_web
+    route_group: x_finance
     transport: browser
     selection_evidence: https://docs.x.com/overview
     url: https://x.com/search?q=stock%20market&src=typed_query
@@ -389,6 +401,7 @@ sources:
     community_type: personal_finance
     region: US
     access_tier: public_web
+    route_group: mr_money_mustache
     transport: browser
     selection_evidence: https://forum.mrmoneymustache.com/
     url: https://forum.mrmoneymustache.com/
@@ -399,10 +412,13 @@ sources:
     topic: 實證投資與個人理財社群
     community_type: personal_finance
     region: CA
-    access_tier: public_web
+    access_tier: member_only
+    route_group: rational_reminder
     transport: browser
     selection_evidence: https://community.rationalreminder.ca/
     url: https://community.rationalreminder.ca/
+    enabled: false
+    disabled_reason: 社群目前將匿名入口重導至 /login，需會員身分，不以頁面標題誤判為公開內容
     required_terms: [Rational Reminder]
 
   - id: white_coat_investor_forum
@@ -433,6 +449,7 @@ sources:
     community_type: retail_investing
     region: US
     access_tier: auth_boundary
+    route_group: reddit_investing
     transport: json_api
     selection_evidence: https://redditinc.com/policies/data-api-terms
     url: https://www.reddit.com/r/investing/hot.json?limit=25
@@ -454,6 +471,7 @@ sources:
     topic: 個人理財熱門問題官方 API
     community_type: personal_finance
     access_tier: public_api
+    route_group: money_stackexchange
     transport: json_api
     selection_evidence: https://api.stackexchange.com/docs/questions
     url: https://api.stackexchange.com/2.3/questions?site=money&order=desc&sort=hot&pagesize=20
@@ -464,6 +482,7 @@ sources:
     topic: 比特幣熱門問題官方 API
     community_type: crypto
     access_tier: public_api
+    route_group: bitcoin_stackexchange
     transport: json_api
     selection_evidence: https://api.stackexchange.com/docs/questions
     url: https://api.stackexchange.com/2.3/questions?site=bitcoin&order=desc&sort=hot&pagesize=20
@@ -474,6 +493,7 @@ sources:
     topic: 量化金融熱門問題官方 API
     community_type: quantitative
     access_tier: public_api
+    route_group: quant_stackexchange
     transport: json_api
     selection_evidence: https://api.stackexchange.com/docs/questions
     url: https://api.stackexchange.com/2.3/questions?site=quant&order=desc&sort=hot&pagesize=20
@@ -485,6 +505,7 @@ sources:
     kind: developer_community
     community_type: crypto
     access_tier: public_api
+    route_group: ethereum_research
     transport: json_api
     selection_evidence: https://ethresear.ch/
     url: https://ethresear.ch/latest.json
@@ -496,6 +517,7 @@ sources:
     kind: developer_community
     community_type: crypto
     access_tier: public_api
+    route_group: ethereum_magicians
     transport: json_api
     selection_evidence: https://ethereum-magicians.org/
     url: https://ethereum-magicians.org/latest.json
@@ -507,6 +529,7 @@ sources:
     community_type: active_trading
     region: IN
     access_tier: public_api
+    route_group: tradingqna
     transport: json_api
     selection_evidence: https://tradingqna.com/
     url: https://tradingqna.com/latest.json
@@ -518,6 +541,7 @@ sources:
     community_type: value_investing
     region: IN
     access_tier: public_api
+    route_group: valuepickr
     transport: json_api
     selection_evidence: https://forum.valuepickr.com/
     url: https://forum.valuepickr.com/latest.json
@@ -528,10 +552,13 @@ sources:
     topic: 實證投資 Discourse API
     community_type: personal_finance
     region: CA
-    access_tier: public_api
+    access_tier: member_only
+    route_group: rational_reminder
     transport: json_api
     selection_evidence: https://community.rationalreminder.ca/
     url: https://community.rationalreminder.ca/latest.json
+    enabled: false
+    disabled_reason: latest.json 明確回傳 not_logged_in，需會員身分
     required_terms: [topic_list, topics]
 
   - id: mastodon_investing_tag
@@ -548,7 +575,7 @@ sources:
     name: Bluesky Stock Market Search API
     topic: 去中心化社群公開金融搜尋
     community_type: social_investing
-    access_tier: public_api
+    access_tier: auth_boundary
     transport: json_api
     selection_evidence: https://docs.bsky.app/docs/advanced-guides/api-directory
     url: https://public.api.bsky.app/xrpc/app.bsky.feed.searchPosts?q=stock%20market&limit=20
@@ -614,6 +641,7 @@ sources:
     topic: X 金融貼文 API 認證邊界
     community_type: social_investing
     access_tier: auth_boundary
+    route_group: x_finance
     transport: json_api
     selection_evidence: https://docs.x.com/overview
     url: https://api.x.com/2/tweets/search/recent?query=stock%20market&max_results=10
@@ -625,6 +653,7 @@ sources:
     topic: 財經影片與留言發現 API 認證邊界
     community_type: social_investing
     access_tier: auth_boundary
+    route_group: youtube_investing
     transport: json_api
     selection_evidence: https://developers.google.com/youtube/v3/docs/search/list
     url: https://www.googleapis.com/youtube/v3/search?part=snippet&q=investing&type=video&maxResults=10
@@ -637,9 +666,11 @@ sources:
     topic: 個人理財問答 Atom
     community_type: personal_finance
     access_tier: public_feed
+    route_group: money_stackexchange
     transport: rss
     selection_evidence: https://money.stackexchange.com/feeds
     url: https://money.stackexchange.com/feeds
+    relay_path: /v1/feed/money_stackexchange_feed
     required_terms: [feed, entry]
 
   - id: bitcoin_stackexchange_feed
@@ -647,9 +678,11 @@ sources:
     topic: 比特幣問答 Atom
     community_type: crypto
     access_tier: public_feed
+    route_group: bitcoin_stackexchange
     transport: rss
     selection_evidence: https://bitcoin.stackexchange.com/feeds
     url: https://bitcoin.stackexchange.com/feeds
+    relay_path: /v1/feed/bitcoin_stackexchange_feed
     required_terms: [feed, entry]
 
   - id: quant_stackexchange_feed
@@ -657,9 +690,11 @@ sources:
     topic: 量化金融問答 Atom
     community_type: quantitative
     access_tier: public_feed
+    route_group: quant_stackexchange
     transport: rss
     selection_evidence: https://quant.stackexchange.com/feeds
     url: https://quant.stackexchange.com/feeds
+    relay_path: /v1/feed/quant_stackexchange_feed
     required_terms: [feed, entry]
 
   - id: ethereum_research_rss
@@ -668,6 +703,7 @@ sources:
     kind: developer_community
     community_type: crypto
     access_tier: public_feed
+    route_group: ethereum_research
     transport: rss
     selection_evidence: https://ethresear.ch/
     url: https://ethresear.ch/latest.rss
@@ -679,6 +715,7 @@ sources:
     kind: developer_community
     community_type: crypto
     access_tier: public_feed
+    route_group: ethereum_magicians
     transport: rss
     selection_evidence: https://ethereum-magicians.org/
     url: https://ethereum-magicians.org/latest.rss
@@ -690,6 +727,7 @@ sources:
     community_type: active_trading
     region: IN
     access_tier: public_feed
+    route_group: tradingqna
     transport: rss
     selection_evidence: https://tradingqna.com/
     url: https://tradingqna.com/latest.rss
@@ -701,6 +739,7 @@ sources:
     community_type: value_investing
     region: IN
     access_tier: public_feed
+    route_group: valuepickr
     transport: rss
     selection_evidence: https://forum.valuepickr.com/
     url: https://forum.valuepickr.com/latest.rss
@@ -711,10 +750,13 @@ sources:
     topic: 實證投資社群 RSS
     community_type: personal_finance
     region: CA
-    access_tier: public_feed
+    access_tier: member_only
+    route_group: rational_reminder
     transport: rss
     selection_evidence: https://community.rationalreminder.ca/
     url: https://community.rationalreminder.ca/latest.rss
+    enabled: false
+    disabled_reason: latest.rss 重導至 /login 並回傳 HTML，不是匿名公開 feed
     required_terms: [rss, item]
 
   - id: elitetrader_forums_rss
@@ -723,6 +765,7 @@ sources:
     community_type: active_trading
     region: US
     access_tier: public_feed
+    route_group: elitetrader_forums
     transport: rss
     selection_evidence: https://www.elitetrader.com/et/forums/
     url: https://www.elitetrader.com/et/forums/-/index.rss
@@ -734,6 +777,7 @@ sources:
     community_type: active_trading
     region: UK
     access_tier: public_feed
+    route_group: trade2win_forums
     transport: rss
     selection_evidence: https://www.trade2win.com/forums/
     url: https://www.trade2win.com/forums/-/index.rss
@@ -745,9 +789,11 @@ sources:
     community_type: personal_finance
     region: US
     access_tier: public_feed
+    route_group: bogleheads
     transport: rss
     selection_evidence: https://www.bogleheads.org/forum/about
     url: https://www.bogleheads.org/forum/app.php/feed
+    relay_path: /v1/feed/bogleheads_forum_feed
     required_terms: [feed, entry]
 
   - id: moneysavingexpert_savings_feed
@@ -756,6 +802,7 @@ sources:
     community_type: personal_finance
     region: UK
     access_tier: public_feed
+    route_group: moneysavingexpert_savings
     transport: rss
     selection_evidence: https://forums.moneysavingexpert.com/categories/savings-investments
     url: https://forums.moneysavingexpert.com/categories/savings-investments/feed.rss
@@ -767,9 +814,11 @@ sources:
     community_type: active_trading
     region: AU
     access_tier: public_feed
+    route_group: aussie_stock_forums
     transport: rss
     selection_evidence: https://www.aussiestockforums.com/forums/
     url: https://www.aussiestockforums.com/forums/-/index.rss
+    relay_path: /v1/feed/aussie_stock_forums_rss
     required_terms: [rss, item]
 
   - id: mr_money_mustache_feed
@@ -778,9 +827,11 @@ sources:
     community_type: personal_finance
     region: US
     access_tier: public_feed
+    route_group: mr_money_mustache
     transport: rss
     selection_evidence: https://forum.mrmoneymustache.com/
     url: https://forum.mrmoneymustache.com/index.php?action=.xml;type=rss
+    relay_path: /v1/feed/mr_money_mustache_feed
     required_terms: [rss, item]
 
   # Catalog-only ecosystems: require credentials, membership, or commercial access.
@@ -790,6 +841,7 @@ sources:
     community_type: retail_investing
     region: US
     access_tier: credentialed_api
+    route_group: reddit_investing
     transport: json_api
     selection_evidence: https://developers.reddit.com/docs/capabilities/server/reddit-api
     url: https://oauth.reddit.com/r/investing/hot?limit=25
@@ -802,6 +854,7 @@ sources:
     topic: X 財經貼文正式搜尋路徑
     community_type: social_investing
     access_tier: commercial_api
+    route_group: x_finance
     transport: json_api
     selection_evidence: https://docs.x.com/overview
     url: https://api.x.com/2/tweets/search/recent?query=stock%20market&max_results=10
@@ -814,6 +867,7 @@ sources:
     topic: 財經影片留言正式 API
     community_type: social_investing
     access_tier: credentialed_api
+    route_group: youtube_investing
     transport: json_api
     selection_evidence: https://developers.google.com/youtube/v3/docs/commentThreads/list
     url: https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=VIDEO_ID

@@ -12,9 +12,9 @@ on:
           - core
           - foreign_communities
       repetitions:
-        description: Number of observations per source
+        description: Same-job burst observations per source (not longitudinal stability)
         required: true
-        default: "2"
+        default: "1"
         type: choice
         options:
           - "1"
@@ -49,7 +49,9 @@ jobs:
         run: python -m playwright install --with-deps chromium
 
       - name: Run contract tests
-        run: python -m pytest --cov=finance_crawler_poc --cov-report=term-missing --cov-fail-under=80
+        run: |
+          python -m pytest --cov=finance_crawler_poc --cov-report=term-missing --cov-fail-under=80
+          node --test worker/test/index.test.mjs
 
       - name: Select bounded source manifest
         run: |
@@ -61,6 +63,8 @@ jobs:
           echo "PROBE_MANIFEST=$manifest" >> "$GITHUB_ENV"
 
       - name: Probe source matrix
+        env:
+          CF_RELAY_BASE_URL: ${{ vars.CF_RELAY_BASE_URL }}
         run: >-
           python -m finance_crawler_poc
           --manifest "$PROBE_MANIFEST"

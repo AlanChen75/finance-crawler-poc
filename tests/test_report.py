@@ -15,6 +15,7 @@ def result(
     region: str = "US",
     access_tier: str = "public_web",
     run_index: int = 1,
+    route_group: str = "",
 ) -> ProbeResult:
     return ProbeResult(
         source_id=source_id,
@@ -36,6 +37,7 @@ def result(
         access_tier=access_tier,
         provenance="test",
         run_index=run_index,
+        route_group=route_group or source_id,
     )
 
 
@@ -71,7 +73,7 @@ def test_write_reports_emits_machine_and_human_readable_contract(tmp_path: Path)
     payload = json.loads(paths.json_path.read_text(encoding="utf-8"))
     markdown = paths.markdown_path.read_text(encoding="utf-8")
 
-    assert payload["schema_version"] == 3
+    assert payload["schema_version"] == 4
     assert payload["summary"] == {"auth_required": 1, "blocked": 1, "success": 2}
     assert payload["breakdown"]["by_transport"] == {
         "browser": {"success": 2},
@@ -93,7 +95,7 @@ def test_write_reports_emits_machine_and_human_readable_contract(tmp_path: Path)
         "public_api": {"auth_required": 1, "blocked": 1},
         "public_web": {"success": 2},
     }
-    assert payload["source_stability"] == [
+    assert payload["path_repeatability"] == [
         {"source_id": "ok", "observations": 2, "successes": 2, "outcomes": {"success": 2}},
         {
             "source_id": "no",
@@ -103,5 +105,73 @@ def test_write_reports_emits_machine_and_human_readable_contract(tmp_path: Path)
         },
     ]
     assert [item["source_id"] for item in payload["results"]] == ["ok", "ok", "no", "no"]
+    assert payload["measurement"]["repeat_semantics"] == "burst_repeatability"
+    assert payload["acquisition"]["resolved_first_pass"]["by_access_tier"] == {
+        "public_api": {"paths": 1, "successes": 0, "success_rate": 0.0},
+        "public_web": {"paths": 1, "successes": 1, "success_rate": 1.0},
+    }
+    assert payload["community_resolution"] == [
+        {
+            "route_group": "ok",
+            "paths": ["ok"],
+            "successful_paths": ["ok"],
+            "resolved": True,
+            "transports": ["browser"],
+        },
+        {
+            "route_group": "no",
+            "paths": ["no"],
+            "successful_paths": [],
+            "resolved": False,
+            "transports": ["json_api"],
+        },
+    ]
     assert "| ok | retail_investing | US | public_web | browser | 2/2 | success=2 |" in markdown
     assert "| 2 | no | quantitative | global | public_api | json_api | auth_required | - |" in markdown
+
+
+def test_report_separates_direct_path_from_relay_resolved_result(tmp_path: Path) -> None:
+    from finance_crawler_poc.models import DeliveryAttempt
+
+    recovered = result("feed", Outcome.SUCCESS, transport="rss", access_tier="public_feed")
+    recovered = ProbeResult(
+        **{
+            **recovered.to_dict(),
+            "outcome": Outcome.SUCCESS,
+            "delivery_attempts": (
+                DeliveryAttempt(
+                    route="direct",
+                    outcome=Outcome.BLOCKED,
+                    status_code=403,
+                    content_chars=100,
+                    content_sha256="b" * 64,
+                    preview="challenge",
+                    error="HTTP 403",
+                ),
+                DeliveryAttempt(
+                    route="cloudflare_relay",
+                    outcome=Outcome.SUCCESS,
+                    status_code=200,
+                    content_chars=1000,
+                    content_sha256="c" * 64,
+                    preview="feed",
+                    error="",
+                ),
+            ),
+        }
+    )
+
+    paths = write_reports([recovered], tmp_path, generated_at="2026-08-08T00:00:00Z")
+    payload = json.loads(paths.json_path.read_text(encoding="utf-8"))
+
+    assert payload["acquisition"]["direct_first_pass"]["by_transport"]["rss"] == {
+        "paths": 1,
+        "successes": 0,
+        "success_rate": 0.0,
+    }
+    assert payload["acquisition"]["resolved_first_pass"]["by_transport"]["rss"] == {
+        "paths": 1,
+        "successes": 1,
+        "success_rate": 1.0,
+    }
+    assert payload["acquisition"]["fallback_recoveries"] == 1
