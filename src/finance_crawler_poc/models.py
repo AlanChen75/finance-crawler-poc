@@ -27,6 +27,7 @@ class Source:
     transport: str
     url: str
     required_terms: tuple[str, ...] = ()
+    required_any_terms: tuple[str, ...] = ()
     min_content_chars: int = 300
     timeout_seconds: int = 40
     retries: int = 1
@@ -112,6 +113,7 @@ class ProbeResult:
     access_tier: str = "public_web"
     route_group: str = ""
     final_url: str = ""
+    content_type: str = ""
     delivery_attempts: tuple[DeliveryAttempt, ...] = ()
 
     def to_dict(self) -> dict[str, Any]:

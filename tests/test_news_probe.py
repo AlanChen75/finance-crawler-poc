@@ -45,6 +45,8 @@ def result_for(source, outcome: Outcome) -> ProbeResult:
         preview="finance news" if outcome is Outcome.SUCCESS else "",
         error="" if outcome is Outcome.SUCCESS else "blocked",
         route_group=source.route_group,
+        final_url="https://finance.example/final",
+        content_type="text/html",
     )
 
 
@@ -99,6 +101,8 @@ def test_brand_probe_falls_back_between_endpoints_but_counts_one_brand() -> None
         "github_actions_crawl4ai"
     }
     assert result.endpoint_attempts[0].outcome == "blocked"
+    assert result.endpoint_attempts[1].final_url == "https://finance.example/final"
+    assert result.endpoint_attempts[1].content_type == "text/html"
 
 
 def test_brand_probe_records_routing_failure_instead_of_dropping_brand() -> None:

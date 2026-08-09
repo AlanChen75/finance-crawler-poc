@@ -130,6 +130,24 @@ def test_probe_rejects_content_below_minimum_after_terms_pass() -> None:
     assert result.error == "content shorter than minimum: 6 < 10"
 
 
+def test_probe_requires_at_least_one_semantic_term_when_configured() -> None:
+    adapter = FakeAdapter(
+        [FetchResponse(status_code=200, content="generic landing page" * 20)]
+    )
+    semantic_source = make_source(
+        required_terms=(),
+        required_any_terms=("finance", "market", "invest"),
+        retries=0,
+    )
+
+    result = asyncio.run(
+        probe_source(semantic_source, adapter, sleep=lambda _: _done())
+    )
+
+    assert result.outcome is Outcome.INVALID_CONTENT
+    assert result.error == "none of the required semantic terms were found"
+
+
 def test_probe_records_direct_failure_and_relay_recovery_separately() -> None:
     adapter = FakeAdapter(
         [

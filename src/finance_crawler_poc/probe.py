@@ -111,6 +111,7 @@ def _evaluate_response(
         error=error,
         run_index=run_index,
         final_url=response.final_url,
+        content_type=response.content_type,
         delivery_attempts=delivery_attempts,
     )
 
@@ -145,6 +146,10 @@ def _response_outcome(
     missing_terms = [term for term in source.required_terms if term.casefold() not in lowered_content]
     if missing_terms:
         return Outcome.INVALID_CONTENT, f"required term missing: {', '.join(missing_terms)}"
+    if source.required_any_terms and not any(
+        term.casefold() in lowered_content for term in source.required_any_terms
+    ):
+        return Outcome.INVALID_CONTENT, "none of the required semantic terms were found"
     if len(response.content) < source.min_content_chars:
         return Outcome.INVALID_CONTENT, (
             f"content shorter than minimum: {len(response.content)} "
@@ -191,6 +196,7 @@ def _result(
     error: str = "",
     run_index: int = 1,
     final_url: str = "",
+    content_type: str = "",
     delivery_attempts: tuple[DeliveryAttempt, ...] = (),
 ) -> ProbeResult:
     normalized_preview = " ".join(content.split())[:500]
@@ -217,6 +223,7 @@ def _result(
         access_tier=source.access_tier,
         route_group=source.route_group or source.id,
         final_url=final_url,
+        content_type=content_type,
         delivery_attempts=delivery_attempts,
     )
 

@@ -40,7 +40,10 @@ def test_http_adapter_supports_static_html() -> None:
         assert request.headers["Accept"].startswith("text/html")
         return httpx.Response(
             200,
-            text="<html><body>Finance news</body></html>",
+            text=(
+                "<html><head><script>fake market payload</script></head>"
+                "<body><h1>Finance news</h1><style>.hidden{}</style></body></html>"
+            ),
             headers={"content-type": "text/html; charset=utf-8"},
             request=request,
         )
@@ -51,6 +54,7 @@ def test_http_adapter_supports_static_html() -> None:
 
     assert response.status_code == 200
     assert response.content_type == "text/html"
+    assert response.content == "Finance news"
 
 
 def test_http_adapter_reports_invalid_json_without_throwing() -> None:

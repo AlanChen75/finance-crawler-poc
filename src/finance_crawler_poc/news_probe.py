@@ -33,6 +33,25 @@ ACCESS_TIER = {
     "static_html": "public_web",
     "browser": "public_web",
 }
+FINANCE_SEMANTIC_TERMS = (
+    "market",
+    "business",
+    "finance",
+    "invest",
+    "bank",
+    "econom",
+    "stock",
+    "fund",
+    "crypto",
+    "money",
+    "trade",
+    "wealth",
+    "insurance",
+    "mortgage",
+    "pension",
+    "asset",
+    "capital",
+)
 
 
 @dataclass(frozen=True)
@@ -48,6 +67,8 @@ class NewsEndpointAttempt:
     content_sha256: str
     preview: str
     error: str
+    final_url: str = ""
+    content_type: str = ""
 
     def to_dict(self) -> dict[str, object]:
         return asdict(self)
@@ -129,6 +150,7 @@ def _source_for_endpoint(brand: NewsBrand, endpoint: NewsEndpoint) -> Source:
         topic="finance_news",
         transport=endpoint.transport,
         url=endpoint.url,
+        required_any_terms=FINANCE_SEMANTIC_TERMS,
         min_content_chars=300,
         timeout_seconds=50 if endpoint.transport == "browser" else 20,
         retries=0,
@@ -156,6 +178,8 @@ def _endpoint_attempt(
         content_sha256=result.content_sha256,
         preview=result.preview,
         error=result.error,
+        final_url=result.final_url,
+        content_type=result.content_type,
     )
 
 

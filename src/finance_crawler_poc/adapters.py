@@ -3,6 +3,7 @@ from __future__ import annotations
 import ipaddress
 import json
 import urllib.robotparser
+from html.parser import HTMLParser
 from typing import Any
 from urllib.parse import urljoin, urlparse
 
@@ -112,6 +113,8 @@ class HttpAdapter:
                     final_url=str(response.url),
                 )
             content = json.dumps(parsed, ensure_ascii=False, sort_keys=True)
+        elif source.transport == "static_html":
+            content = _visible_html_text(content)
         return FetchResponse(
             status_code=response.status_code,
             content=content,
@@ -236,6 +239,33 @@ def _markdown_text(markdown: Any) -> str:
         return ""
     raw_markdown = getattr(markdown, "raw_markdown", None)
     return str(raw_markdown if raw_markdown is not None else markdown)
+
+
+class _VisibleTextParser(HTMLParser):
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self._ignored_depth = 0
+        self.parts: list[str] = []
+
+    def handle_starttag(
+        self, tag: str, attrs: list[tuple[str, str | None]]
+    ) -> None:
+        if tag in {"script", "style", "noscript", "template"}:
+            self._ignored_depth += 1
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag in {"script", "style", "noscript", "template"}:
+            self._ignored_depth = max(0, self._ignored_depth - 1)
+
+    def handle_data(self, data: str) -> None:
+        if self._ignored_depth == 0 and data.strip():
+            self.parts.append(data.strip())
+
+
+def _visible_html_text(content: str) -> str:
+    parser = _VisibleTextParser()
+    parser.feed(content)
+    return " ".join(" ".join(parser.parts).split())
 
 
 def _content_type(response: httpx.Response) -> str:
