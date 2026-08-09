@@ -44,7 +44,7 @@ jobs:
 
       - name: Set up Node.js
         if: inputs.scope == 'foreign_communities'
-        uses: actions/setup-node@1e60f620b9541d2721d24b011f0b56d0eb9b8c2b # v6.3.0
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: "22"
           cache: npm

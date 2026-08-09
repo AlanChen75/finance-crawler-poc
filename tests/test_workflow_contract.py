@@ -19,3 +19,7 @@ def test_workflow_can_select_the_bounded_foreign_community_manifest() -> None:
     assert "node --test experiments/crawlee-browser/test/*.test.mjs" in workflow
     assert "experiments/crawlee-browser/scripts/run-crawlee.mjs" in workflow
     assert "artifacts/crawlee-browser.json" in workflow
+    assert (
+        "actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0"
+        in workflow
+    )
