@@ -6,7 +6,7 @@
 
 網路上不存在可證明封閉的「所有財經社群」名單。本專案把全面定義為：覆蓋所有主流資料取得形態、主要財經討論族群與代表性區域市場，並把無法匿名取得的主流平台保留在 catalog，而不是假裝不存在。
 
-`foreign-community-sources.yaml` 目前包含 86 條獨立來源路徑：70 條可由 GitHub Actions 在無憑證狀態下探測、16 條 catalog-only。可跑路徑分為 38 條 browser、18 條 JSON API、14 條 RSS/Atom；其中真正的公開分母是 38 條 public web、14 條 public API 與 14 條 public feed，另有 4 條是無憑證認證邊界探測。
+`foreign-community-sources.yaml` 目前包含 86 條獨立來源路徑：70 條無憑證結果記錄、16 條 catalog-only。前者分為 38 條 browser、18 條 JSON API、14 條 RSS/Atom；其中公開治理分母是 38 條 public web、14 條 public API 與 14 條 public feed，另有 4 條是無憑證認證邊界探測。38 條 browser 內有 7 條版本化 robots 禁止，Actions 會產生明確結果但不對目標發出 Browser 請求。
 
 這不是「86 個互不重複網站」：公開路徑透過 `route_group` 合併為 47 個可解析社群／開源生態，其餘是認證或會員邊界。Reddit 的不同 subreddit、Telegram 頻道、Discord server 與 Facebook group 數量會持續變動，因此 catalog 以平台與代表性財經入口為單位。
 
@@ -102,6 +102,10 @@ Rational Reminder 目前將社群首頁與 RSS 重導到 `/login`，`latest.json
 - browser 一律檢查 robots.txt；
 - 每輪都必須為 86 條來源產生結果，停用項目也必須明確記錄。
 
-預設一輪應產生 86 筆結果，其中 70 筆為實際無憑證探測、16 筆為明確停用紀錄。理論最壞探測時間約 24.5 分鐘，再加環境安裝仍應落在 workflow 的 60 分鐘上限內；run `31231582994` 的探測步驟實際為 3 分 4 秒，整個 job 為 4 分 37 秒。
+預設一輪應產生 86 筆結果，其中 63 筆最多會實際發出無憑證探測、7 筆為已驗證 robots 排除、16 筆為明確停用紀錄。理論最壞探測時間約 24.5 分鐘，再加環境安裝仍應落在 workflow 的 60 分鐘上限內；最終 run `31287504043` 的主探測步驟為 3 分 2 秒，Crawlee 處理組為 2 分 13 秒，整個 job 為 6 分 40 秒。
 
 報表 schema v4 必須提供：`by_transport`、`by_kind`、`by_community_type`、`by_region`、`by_access_tier`、`direct_first_pass`、`resolved_first_pass`、`community_resolution` 與 `path_repeatability`。`success` 只代表該公開入口通過當時的 transport、最低長度與必要詞契約，不代表可完整回溯歷史、取得留言、合法再發布或內容可信。
+
+## 2026-08-09 Browser 處理組更新
+
+最終同批 URL 實驗已將 Crawl4AI、Crawlee、Cloudflare Browser Run 分開測量，並統一 7 條 robots 排除與 31 條技術分母。Run `31287504043` 中 Crawl4AI 為 23/31（74.19%）、Crawlee 為 25/31（80.65%）、當輪聯集 26/31（83.87%）；三輪穩定聯集為 25/31（80.65%）。完整方法、失敗來源、Cloudflare 1/7 pilot 與商業出口 A/B 驗收契約見 [`browser-treatment-experiment.md`](browser-treatment-experiment.md)。

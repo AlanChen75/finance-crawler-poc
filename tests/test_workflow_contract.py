@@ -17,6 +17,7 @@ def test_workflow_can_select_the_bounded_foreign_community_manifest() -> None:
     assert "node --test worker/test/index.test.mjs" in workflow
     assert "npm ci --prefix experiments/crawlee-browser" in workflow
     assert "node --test experiments/crawlee-browser/test/*.test.mjs" in workflow
+    assert "node --test experiments/cloudflare-browser-run/test/*.test.mjs" in workflow
     assert "experiments/crawlee-browser/scripts/run-crawlee.mjs" in workflow
     assert "artifacts/crawlee-browser.json" in workflow
     assert (

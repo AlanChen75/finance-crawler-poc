@@ -69,6 +69,7 @@ jobs:
           python -m pytest --cov=finance_crawler_poc --cov-report=term-missing --cov-fail-under=80
           node --test worker/test/index.test.mjs
           node --test experiments/crawlee-browser/test/*.test.mjs
+          node --test experiments/cloudflare-browser-run/test/*.test.mjs
 
       - name: Select bounded source manifest
         run: |
