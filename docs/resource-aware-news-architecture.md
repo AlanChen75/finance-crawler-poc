@@ -79,6 +79,27 @@ flowchart LR
 
 1. 已完成：品牌／endpoint schema、120＝100+20 契約、120 個不重複品牌 catalog、資源路由器與 executor catalog。
 2. 已完成：品牌級 endpoint fallback、實際 probe、executor 證據與 `news-report.json`；手動 workflow scope 是 `news_120`。
-3. 執行中：在 GitHub Actions 完成第一個 120 品牌 observation；同一輪不重複三次。
+3. 已完成：GitHub Actions 第一個 120 品牌 observation；同一輪沒有重複三次。
 4. 待執行：把後續正常抓取寫入跨時間 observation state；只有近期失敗或變更者優先重驗。
-5. 待執行：依失敗群組啟動同 URL、同判定規則的商業 executor A/B；未配置憑證時維持 blocked，而不是推估成功率。
+5. 待執行：依失敗群組啟動同 URL、同判定規則的 Cloudflare／商業 executor A/B；未配置能力或憑證時維持 blocked，而不是推估成功率。
+
+## 2026-08-09 第一輪嚴格實測
+
+[GitHub Actions run 31309377786](https://github.com/AlanChen75/finance-crawler-poc/actions/runs/31309377786) 在 commit `ff2c46a` 完成單輪 120 品牌實測。這一輪先將 static HTML 轉成可見文字，排除 script、style、template 與 noscript，再要求至少 300 字且命中任一財經語意詞；Browser 使用 Crawl4AI markdown，RSS 與 JSON 保留機器格式驗證。報表只保存 preview、SHA-256、final URL 與 content type，不保存完整正文。
+
+| 指標 | 結果 |
+|---|---:|
+| 唯一品牌結果 | 120/120 有紀錄 |
+| 品牌成功 | 99/120（82.5%） |
+| 財經專業媒體 | 79/100（79%） |
+| 綜合媒體財經部門 | 20/20（100%） |
+| Endpoint attempts | 141 |
+| Endpoint fallback 救回 | 17 個品牌 |
+| RSS 成功 | 32 |
+| JSON API 成功 | 2 |
+| Static HTML 成功 | 49 |
+| Browser 成功 | 16/25；排除 3 個 robots 終點後為 16/22（72.7%） |
+
+21 個品牌未成功：15 個 blocked、3 個 invalid content、3 個 robots denied。90% 門檻需要 108 家，這一輪還差 9 家；95% 門檻需要 114 家，還差 15 家。這輪 runtime state 只開放 `github_actions_crawl4ai`，所以 141 次 endpoint attempt 全由 GitHub executor 執行；Cloudflare Browser Run、Firecrawl Hosted 與 Browserless Residential 沒有被假裝成已測。
+
+機器可讀摘要保存在 `experiments/news-120/run-31309377786-summary.json`；完整 Action artifact 的 `news-report.json` SHA-256 是 `5e991ab2c3ee406689826ec6213ce1ff1e5ef128997992eaea6f0f325154ab19`。
