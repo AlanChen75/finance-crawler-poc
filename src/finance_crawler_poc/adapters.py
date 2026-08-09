@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import ipaddress
 import json
+import urllib.robotparser
 from typing import Any
-from urllib.parse import urlparse
+from urllib.parse import urljoin, urlparse
 
 import httpx
 
@@ -134,12 +135,22 @@ class HttpAdapter:
 class Crawl4AIAdapter:
     """Lazy adapter so API/RSS probes still run if Chromium initialization fails."""
 
-    def __init__(self) -> None:
+    def __init__(
+        self, *, robots_transport: httpx.AsyncBaseTransport | None = None
+    ) -> None:
         self._crawler: Any = None
         self._context: Any = None
         self._init_error: Exception | None = None
+        self._robots_client = httpx.AsyncClient(
+            follow_redirects=True,
+            headers={"User-Agent": USER_AGENT},
+            transport=robots_transport,
+        )
 
     async def fetch(self, source: Source) -> FetchResponse:
+        robots_denial = await self._explicit_robots_denial(source)
+        if robots_denial is not None:
+            return robots_denial
         await self._ensure_crawler()
         if self._init_error is not None:
             raise RuntimeError(f"Crawl4AI initialization failed: {self._init_error}")
@@ -168,6 +179,35 @@ class Crawl4AIAdapter:
             final_url=str(getattr(result, "url", source.url)),
         )
 
+    async def _explicit_robots_denial(self, source: Source) -> FetchResponse | None:
+        robots_url = urljoin(source.url, "/robots.txt")
+        try:
+            response = await self._robots_client.get(
+                robots_url,
+                timeout=min(10, source.timeout_seconds),
+            )
+        except httpx.HTTPError:
+            # Crawl4AI still performs its own robots check. This preflight exists
+            # for explicit rules returned with non-standard HTTP status codes.
+            return None
+
+        body = response.text
+        if "user-agent:" not in body.casefold():
+            return None
+        parser = urllib.robotparser.RobotFileParser()
+        parser.set_url(str(response.url))
+        parser.parse(body.splitlines())
+        if parser.can_fetch("*", source.url):
+            return None
+        return FetchResponse(
+            status_code=response.status_code,
+            content="",
+            error=f"robots.txt disallowed by explicit rule (HTTP {response.status_code})",
+            route="robots_preflight",
+            content_type=_content_type(response),
+            final_url=source.url,
+        )
+
     async def _ensure_crawler(self) -> None:
         if self._crawler is not None or self._init_error is not None:
             return
@@ -185,6 +225,7 @@ class Crawl4AIAdapter:
             self._init_error = exc
 
     async def close(self) -> None:
+        await self._robots_client.aclose()
         if self._context is not None:
             await self._context.__aexit__(None, None, None)
 

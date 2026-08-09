@@ -179,9 +179,17 @@ def test_crawl4ai_adapter_enforces_robots_and_page_timeout(monkeypatch) -> None:
                 url="https://example.com/final",
             )
 
-    adapter = Crawl4AIAdapter()
+    async def robots_handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200,
+            text="User-agent: *\nAllow: /\n",
+            request=request,
+        )
+
+    adapter = Crawl4AIAdapter(robots_transport=httpx.MockTransport(robots_handler))
     adapter._crawler = Crawler()
     response = asyncio.run(adapter.fetch(source("browser")))
+    asyncio.run(adapter.close())
 
     assert response.content == "market evidence"
     assert response.final_url == "https://example.com/final"
@@ -189,6 +197,32 @@ def test_crawl4ai_adapter_enforces_robots_and_page_timeout(monkeypatch) -> None:
     assert captured["check_robots_txt"] is True
     assert captured["page_timeout"] == 40_000
     assert captured["delay_before_return_html"] == 1.0
+
+
+def test_crawl4ai_preflight_honors_explicit_disallow_in_http_418_body() -> None:
+    requests: list[httpx.Request] = []
+
+    async def robots_handler(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        return httpx.Response(
+            418,
+            text=(
+                "License: https://stackoverflow.com/license.xml\n\n"
+                "User-agent: *\n"
+                "Disallow: /\n"
+            ),
+            request=request,
+        )
+
+    adapter = Crawl4AIAdapter(robots_transport=httpx.MockTransport(robots_handler))
+    response = asyncio.run(adapter.fetch(source("browser")))
+    asyncio.run(adapter.close())
+
+    assert [str(request.url) for request in requests] == ["https://example.com/robots.txt"]
+    assert response.status_code == 418
+    assert response.route == "robots_preflight"
+    assert "robots.txt disallowed" in response.error
+    assert adapter._crawler is None
 
 
 def test_crawl4ai_uses_browser_default_user_agent_and_isolated_context(monkeypatch) -> None:
