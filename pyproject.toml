@@ -23,6 +23,7 @@ test = [
 
 [project.scripts]
 finance-crawler-probe = "finance_crawler_poc.cli:main"
+finance-news-probe = "finance_crawler_poc.news_cli:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/finance_crawler_poc"]

@@ -3,6 +3,7 @@ from __future__ import annotations
 import ipaddress
 import re
 from collections.abc import Mapping
+from datetime import date
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
@@ -13,7 +14,46 @@ from finance_crawler_poc.models import Manifest, Source
 
 
 ALLOWED_TRANSPORTS = frozenset({"browser", "json_api", "rss"})
+ALLOWED_KINDS = frozenset(
+    {
+        "aggregator",
+        "community",
+        "developer_community",
+        "market_data",
+        "news",
+        "official_data",
+        "official_news",
+        "other",
+        "reference",
+    }
+)
+ALLOWED_COMMUNITY_TYPES = frozenset(
+    {
+        "active_trading",
+        "crypto",
+        "developer_ecosystem",
+        "not_applicable",
+        "personal_finance",
+        "professional_finance",
+        "quantitative",
+        "retail_investing",
+        "social_investing",
+        "value_investing",
+    }
+)
+ALLOWED_ACCESS_TIERS = frozenset(
+    {
+        "auth_boundary",
+        "commercial_api",
+        "credentialed_api",
+        "member_only",
+        "public_api",
+        "public_feed",
+        "public_web",
+    }
+)
 SOURCE_ID_PATTERN = re.compile(r"^[a-z][a-z0-9_]{1,63}$")
+REGION_PATTERN = re.compile(r"^[A-Za-z][A-Za-z0-9_-]{1,31}$")
 BASE_DEFAULTS: Mapping[str, int] = {
     "timeout_seconds": 40,
     "retries": 1,
@@ -96,6 +136,83 @@ def _parse_source(item: Mapping[str, Any], index: int) -> Source:
     provenance = item.get("provenance", "curated")
     if not isinstance(provenance, str) or not provenance.strip():
         raise ManifestError(f"source {values['id']} provenance must be a string")
+    kind = item.get("kind", "other")
+    if not isinstance(kind, str) or kind not in ALLOWED_KINDS:
+        raise ManifestError(f"source {values['id']} kind must be one of {sorted(ALLOWED_KINDS)}")
+    selection_evidence = item.get("selection_evidence", "")
+    if not isinstance(selection_evidence, str):
+        raise ManifestError(f"source {values['id']} selection_evidence must be a string")
+    if selection_evidence:
+        try:
+            _validate_public_http_url(selection_evidence, values["id"])
+        except ManifestError as exc:
+            raise ManifestError(
+                f"source {values['id']} selection_evidence must use a public http or https URL"
+            ) from exc
+    community_type = item.get("community_type", "not_applicable")
+    if not isinstance(community_type, str) or community_type not in ALLOWED_COMMUNITY_TYPES:
+        raise ManifestError(
+            f"source {values['id']} community_type must be one of "
+            f"{sorted(ALLOWED_COMMUNITY_TYPES)}"
+        )
+    region = item.get("region", "global")
+    if not isinstance(region, str) or not REGION_PATTERN.fullmatch(region):
+        raise ManifestError(
+            f"source {values['id']} region must be a 2-32 character region code"
+        )
+    default_access_tier = {
+        "browser": "public_web",
+        "json_api": "public_api",
+        "rss": "public_feed",
+    }[values["transport"]]
+    access_tier = item.get("access_tier", default_access_tier)
+    if not isinstance(access_tier, str) or access_tier not in ALLOWED_ACCESS_TIERS:
+        raise ManifestError(
+            f"source {values['id']} access_tier must be one of {sorted(ALLOWED_ACCESS_TIERS)}"
+        )
+    route_group = item.get("route_group", values["id"])
+    if not isinstance(route_group, str) or not SOURCE_ID_PATTERN.fullmatch(route_group):
+        raise ManifestError(f"source {values['id']} route_group must be a valid source-style id")
+    relay_path = item.get("relay_path", "")
+    if not isinstance(relay_path, str):
+        raise ManifestError(f"source {values['id']} relay_path must be a string")
+    expected_relay_path = f"/v1/feed/{values['id']}"
+    if relay_path and (
+        values["transport"] != "rss" or relay_path != expected_relay_path
+    ):
+        raise ManifestError(
+            f"source {values['id']} relay_path must equal {expected_relay_path} for RSS sources"
+        )
+
+    robots_denied = item.get("robots_denied", False)
+    if not isinstance(robots_denied, bool):
+        raise ManifestError(f"source {values['id']} robots_denied must be boolean")
+    robots_evidence = item.get("robots_evidence", "")
+    robots_checked_at = item.get("robots_checked_at", "")
+    if not isinstance(robots_evidence, str):
+        raise ManifestError(f"source {values['id']} robots_evidence must be a string")
+    if not isinstance(robots_checked_at, str):
+        raise ManifestError(f"source {values['id']} robots_checked_at must be a string")
+    if robots_denied:
+        if values["transport"] != "browser":
+            raise ManifestError(
+                f"source {values['id']} robots_denied is only valid for browser sources"
+            )
+        if not robots_evidence.strip():
+            raise ManifestError(f"source {values['id']} robots_evidence is required")
+        _validate_public_http_url(robots_evidence.strip(), values["id"])
+        if not robots_checked_at.strip():
+            raise ManifestError(f"source {values['id']} robots_checked_at is required")
+        try:
+            date.fromisoformat(robots_checked_at.strip())
+        except ValueError as exc:
+            raise ManifestError(
+                f"source {values['id']} robots_checked_at must be an ISO date"
+            ) from exc
+    elif robots_evidence or robots_checked_at:
+        raise ManifestError(
+            f"source {values['id']} robots evidence requires robots_denied: true"
+        )
 
     return Source(
         id=values["id"],
@@ -110,6 +227,16 @@ def _parse_source(item: Mapping[str, Any], index: int) -> Source:
         enabled=enabled,
         disabled_reason=disabled_reason.strip(),
         provenance=provenance.strip(),
+        kind=kind,
+        selection_evidence=selection_evidence.strip(),
+        community_type=community_type,
+        region=region,
+        access_tier=access_tier,
+        route_group=route_group,
+        relay_path=relay_path,
+        robots_denied=robots_denied,
+        robots_evidence=robots_evidence.strip(),
+        robots_checked_at=robots_checked_at.strip(),
     )
 
 
