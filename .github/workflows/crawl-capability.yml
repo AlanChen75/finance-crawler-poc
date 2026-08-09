@@ -42,16 +42,33 @@ jobs:
           python-version: "3.12"
           cache: pip
 
+      - name: Set up Node.js
+        if: inputs.scope == 'foreign_communities'
+        uses: actions/setup-node@1e60f620b9541d2721d24b011f0b56d0eb9b8c2b # v6.3.0
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: experiments/crawlee-browser/package-lock.json
+
       - name: Install project
         run: python -m pip install --disable-pip-version-check -e '.[test]'
 
+      - name: Install Crawlee treatment
+        if: inputs.scope == 'foreign_communities'
+        run: npm ci --prefix experiments/crawlee-browser
+
       - name: Install Chromium and system dependencies
         run: python -m playwright install --with-deps chromium
+
+      - name: Install Crawlee Chromium revision
+        if: inputs.scope == 'foreign_communities'
+        run: npx --prefix experiments/crawlee-browser playwright install chromium
 
       - name: Run contract tests
         run: |
           python -m pytest --cov=finance_crawler_poc --cov-report=term-missing --cov-fail-under=80
           node --test worker/test/index.test.mjs
+          node --test experiments/crawlee-browser/test/*.test.mjs
 
       - name: Select bounded source manifest
         run: |
@@ -71,9 +88,20 @@ jobs:
           --output artifacts
           --repeat "${{ inputs.repetitions }}"
 
+      - name: Run Crawlee Browser treatment
+        if: inputs.scope == 'foreign_communities'
+        run: >-
+          node experiments/crawlee-browser/scripts/run-crawlee.mjs
+          --manifest foreign-community-sources.yaml
+          --output artifacts/crawlee-browser.json
+
       - name: Add report to job summary
         if: always() && hashFiles('artifacts/report.md') != ''
         run: cat artifacts/report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Add Crawlee report to job summary
+        if: always() && hashFiles('artifacts/crawlee-report.md') != ''
+        run: cat artifacts/crawlee-report.md >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload capability report
         if: always()
