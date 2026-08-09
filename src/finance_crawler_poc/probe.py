@@ -43,6 +43,19 @@ async def probe_source(
             error=source.disabled_reason,
             run_index=run_index,
         )
+    if source.robots_denied:
+        return _result(
+            source,
+            outcome=Outcome.ROBOTS_DENIED,
+            attempts=0,
+            elapsed_ms=_elapsed_ms(started),
+            error=(
+                f"catalog robots.txt disallow verified {source.robots_checked_at}: "
+                f"{source.robots_evidence}"
+            ),
+            run_index=run_index,
+            final_url=source.url,
+        )
 
     last_result: ProbeResult | None = None
     for attempt in range(1, source.retries + 2):

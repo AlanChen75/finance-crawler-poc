@@ -7,9 +7,9 @@ import YAML from "yaml";
 
 import {
   CRAWLER_POLICY,
-  PREFLIGHT_EXCLUSIONS,
   buildResult,
   buildSkippedResultForEvent,
+  catalogRobotsExclusions,
   selectBrowserSources,
   statusCodeFromError,
   summarizeResults,
@@ -31,11 +31,12 @@ if (sources.length !== 38) {
 
 const sourceById = new Map(sources.map((source) => [source.id, source]));
 const sourceByUrl = new Map(sources.map((source) => [source.url, source]));
+const preflightExclusions = catalogRobotsExclusions(sources);
 const results = sources
-  .filter((source) => PREFLIGHT_EXCLUSIONS[source.id])
+  .filter((source) => preflightExclusions[source.id])
   .map((source) =>
     buildResult(source, {
-      skippedReason: PREFLIGHT_EXCLUSIONS[source.id],
+      skippedReason: preflightExclusions[source.id],
       statusCode: null,
       title: "",
       content: "",
@@ -104,7 +105,7 @@ const crawler = new PlaywrightCrawler({
 });
 
 const requests = sources
-  .filter((source) => !PREFLIGHT_EXCLUSIONS[source.id])
+  .filter((source) => !preflightExclusions[source.id])
   .map((source) => ({
     url: source.url,
     uniqueKey: source.id,
@@ -143,7 +144,7 @@ const report = {
     proxy: "none",
     policy: CRAWLER_POLICY,
   },
-  preflight_exclusions: PREFLIGHT_EXCLUSIONS,
+  preflight_exclusions: preflightExclusions,
   summary: summarizeResults(orderedResults),
   results: orderedResults,
 };

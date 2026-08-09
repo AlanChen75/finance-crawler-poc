@@ -40,6 +40,9 @@ class Source:
     access_tier: str = "public_web"
     route_group: str = ""
     relay_path: str = ""
+    robots_denied: bool = False
+    robots_evidence: str = ""
+    robots_checked_at: str = ""
 
 
 @dataclass(frozen=True)

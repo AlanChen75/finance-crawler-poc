@@ -42,6 +42,24 @@ def test_probe_requires_content_contract_not_only_http_200() -> None:
     assert "required term" in result.error
 
 
+def test_probe_excludes_catalog_verified_robots_denial_before_adapter_call() -> None:
+    adapter = FakeAdapter([])
+    source = make_source(
+        robots_denied=True,
+        robots_evidence="https://example.com/robots.txt",
+        robots_checked_at="2026-08-09",
+    )
+
+    result = asyncio.run(probe_source(source, adapter, sleep=lambda _: _done()))
+
+    assert result.outcome is Outcome.ROBOTS_DENIED
+    assert result.attempts == 0
+    assert result.status_code is None
+    assert result.final_url == source.url
+    assert "2026-08-09" in result.error
+    assert adapter.calls == 0
+
+
 def test_probe_retries_rate_limit_and_records_success_evidence() -> None:
     adapter = FakeAdapter(
         [

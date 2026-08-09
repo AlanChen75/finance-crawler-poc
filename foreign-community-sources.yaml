@@ -41,6 +41,9 @@ sources:
     selection_evidence: https://redditinc.com/policies/data-api-terms
     url: https://www.reddit.com/r/investing/hot/
     required_terms: [investing]
+    robots_denied: true
+    robots_evidence: https://www.reddit.com/robots.txt
+    robots_checked_at: "2026-08-09"
 
   - id: quant_stackexchange_hot
     name: Quantitative Finance Stack Exchange Hot
@@ -52,6 +55,9 @@ sources:
     selection_evidence: https://quant.stackexchange.com/questions?tab=Hot
     url: https://quant.stackexchange.com/questions?tab=Hot
     required_terms: [Quantitative Finance]
+    robots_denied: true
+    robots_evidence: https://quant.stackexchange.com/robots.txt
+    robots_checked_at: "2026-08-09"
 
   - id: openbb_github_discussions
     name: OpenBB GitHub Discussions
@@ -164,6 +170,9 @@ sources:
     selection_evidence: https://valueinvestorsclub.com/
     url: https://valueinvestorsclub.com/ideas
     required_terms: [Value Investors Club]
+    robots_denied: true
+    robots_evidence: https://valueinvestorsclub.com/robots.txt
+    robots_checked_at: "2026-08-09"
 
   - id: cornerofberkshire_forum
     name: Corner of Berkshire and Fairfax
@@ -309,6 +318,9 @@ sources:
     selection_evidence: https://money.stackexchange.com/questions?tab=Hot
     url: https://money.stackexchange.com/questions?tab=Hot
     required_terms: [Personal Finance, Money]
+    robots_denied: true
+    robots_evidence: https://money.stackexchange.com/robots.txt
+    robots_checked_at: "2026-08-09"
 
   - id: bitcoin_stackexchange_hot
     name: Bitcoin Stack Exchange
@@ -320,6 +332,9 @@ sources:
     selection_evidence: https://bitcoin.stackexchange.com/questions?tab=Hot
     url: https://bitcoin.stackexchange.com/questions?tab=Hot
     required_terms: [Bitcoin]
+    robots_denied: true
+    robots_evidence: https://bitcoin.stackexchange.com/robots.txt
+    robots_checked_at: "2026-08-09"
 
   - id: quantconnect_forum
     name: QuantConnect Forum
@@ -384,6 +399,9 @@ sources:
     selection_evidence: https://docs.x.com/overview
     url: https://x.com/search?q=stock%20market&src=typed_query
     required_terms: [Search]
+    robots_denied: true
+    robots_evidence: https://x.com/robots.txt
+    robots_checked_at: "2026-08-09"
 
   - id: quora_investing
     name: Quora Investing Topic
@@ -394,6 +412,9 @@ sources:
     selection_evidence: https://www.quora.com/topic/Investing
     url: https://www.quora.com/topic/Investing
     required_terms: [Investing]
+    robots_denied: true
+    robots_evidence: https://www.quora.com/robots.txt
+    robots_checked_at: "2026-08-09"
 
   - id: mr_money_mustache_forum
     name: Mr. Money Mustache Forum

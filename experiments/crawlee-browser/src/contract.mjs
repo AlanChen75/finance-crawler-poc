@@ -23,14 +23,6 @@ export const CRAWLER_POLICY = Object.freeze({
   retryOnBlocked: false,
 });
 
-export const PREFLIGHT_EXCLUSIONS = Object.freeze({
-  reddit_investing_html: "robots_denied_in_crawl4ai_baseline",
-  valueinvestorsclub_ideas: "robots_denied_in_crawl4ai_baseline",
-  x_finance_search_web: "robots_denied_in_crawl4ai_baseline",
-  quora_investing: "robots_denied_in_crawl4ai_baseline",
-  quant_stackexchange_hot: "robots_disallow_all_verified_2026-08-09",
-});
-
 export function selectBrowserSources(manifest) {
   const defaults = manifest?.defaults || {};
   return (manifest?.sources || [])
@@ -45,6 +37,17 @@ export function selectBrowserSources(manifest) {
         item.min_content_chars ?? defaults.min_content_chars ?? 300,
       timeout_seconds: item.timeout_seconds ?? defaults.timeout_seconds ?? 40,
     }));
+}
+
+export function catalogRobotsExclusions(sources) {
+  return Object.fromEntries(
+    sources
+      .filter((source) => source.robots_denied)
+      .map((source) => [
+        source.id,
+        `catalog robots.txt disallow verified ${source.robots_checked_at}: ${source.robots_evidence}`,
+      ]),
+  );
 }
 
 const isAuthRedirect = (sourceUrl, finalUrl) => {

@@ -76,3 +76,20 @@ def test_financial_wisdom_browser_and_feed_share_a_fallback_group() -> None:
     assert sources["financial_wisdom_forum_feed"].relay_path.endswith(
         "/financial_wisdom_forum_feed"
     )
+
+
+def test_browser_cohort_has_versioned_robots_exclusions() -> None:
+    manifest = load_manifest(CATALOG_PATH)
+    excluded = {source.id: source for source in manifest.sources if source.robots_denied}
+
+    assert set(excluded) == {
+        "bitcoin_stackexchange_hot",
+        "money_stackexchange_hot",
+        "quant_stackexchange_hot",
+        "quora_investing",
+        "reddit_investing_html",
+        "valueinvestorsclub_ideas",
+        "x_finance_search_web",
+    }
+    assert all(source.robots_evidence.endswith("/robots.txt") for source in excluded.values())
+    assert all(source.robots_checked_at == "2026-08-09" for source in excluded.values())

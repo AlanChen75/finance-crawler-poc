@@ -4,6 +4,7 @@ import { test } from "node:test";
 import {
   BLOCK_MARKERS,
   CRAWLER_POLICY,
+  catalogRobotsExclusions,
   buildSkippedResultForEvent,
   buildResult,
   evaluatePage,
@@ -46,6 +47,20 @@ test("only enabled Browser sources enter the Crawlee treatment", () => {
   assert.deepEqual(selected, [
     { ...source, min_content_chars: 300, timeout_seconds: 40 },
   ]);
+});
+
+test("versioned catalog robots denials become preflight exclusions", () => {
+  const denied = {
+    ...source,
+    robots_denied: true,
+    robots_evidence: "https://hotcopper.com.au/robots.txt",
+    robots_checked_at: "2026-08-09",
+  };
+
+  assert.deepEqual(catalogRobotsExclusions([source, denied]), {
+    hotcopper_home:
+      "catalog robots.txt disallow verified 2026-08-09: https://hotcopper.com.au/robots.txt",
+  });
 });
 
 test("the page contract accepts valid content and rejects WAF pages", () => {

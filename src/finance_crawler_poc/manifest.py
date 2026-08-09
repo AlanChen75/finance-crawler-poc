@@ -3,6 +3,7 @@ from __future__ import annotations
 import ipaddress
 import re
 from collections.abc import Mapping
+from datetime import date
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
@@ -183,6 +184,36 @@ def _parse_source(item: Mapping[str, Any], index: int) -> Source:
             f"source {values['id']} relay_path must equal {expected_relay_path} for RSS sources"
         )
 
+    robots_denied = item.get("robots_denied", False)
+    if not isinstance(robots_denied, bool):
+        raise ManifestError(f"source {values['id']} robots_denied must be boolean")
+    robots_evidence = item.get("robots_evidence", "")
+    robots_checked_at = item.get("robots_checked_at", "")
+    if not isinstance(robots_evidence, str):
+        raise ManifestError(f"source {values['id']} robots_evidence must be a string")
+    if not isinstance(robots_checked_at, str):
+        raise ManifestError(f"source {values['id']} robots_checked_at must be a string")
+    if robots_denied:
+        if values["transport"] != "browser":
+            raise ManifestError(
+                f"source {values['id']} robots_denied is only valid for browser sources"
+            )
+        if not robots_evidence.strip():
+            raise ManifestError(f"source {values['id']} robots_evidence is required")
+        _validate_public_http_url(robots_evidence.strip(), values["id"])
+        if not robots_checked_at.strip():
+            raise ManifestError(f"source {values['id']} robots_checked_at is required")
+        try:
+            date.fromisoformat(robots_checked_at.strip())
+        except ValueError as exc:
+            raise ManifestError(
+                f"source {values['id']} robots_checked_at must be an ISO date"
+            ) from exc
+    elif robots_evidence or robots_checked_at:
+        raise ManifestError(
+            f"source {values['id']} robots evidence requires robots_denied: true"
+        )
+
     return Source(
         id=values["id"],
         name=values["name"],
@@ -203,6 +234,9 @@ def _parse_source(item: Mapping[str, Any], index: int) -> Source:
         access_tier=access_tier,
         route_group=route_group,
         relay_path=relay_path,
+        robots_denied=robots_denied,
+        robots_evidence=robots_evidence.strip(),
+        robots_checked_at=robots_checked_at.strip(),
     )
 
 

@@ -40,6 +40,9 @@ sources:
     url: https://www.sec.gov/edgar
     enabled: false
     disabled_reason: contact identity required
+    robots_denied: true
+    robots_evidence: https://www.sec.gov/robots.txt
+    robots_checked_at: "2026-08-09"
 """,
     )
 
@@ -54,6 +57,9 @@ sources:
     assert manifest.sources[0].region == "global"
     assert manifest.sources[0].access_tier == "public_api"
     assert manifest.sources[0].selection_evidence == "https://example.com/docs"
+    assert manifest.sources[1].robots_denied is True
+    assert manifest.sources[1].robots_evidence == "https://www.sec.gov/robots.txt"
+    assert manifest.sources[1].robots_checked_at == "2026-08-09"
     assert manifest.sources[0].route_group == "example_market"
     assert manifest.sources[1].route_group == "sec"
     assert manifest.sources[1].enabled is False
@@ -178,6 +184,22 @@ sources:
   - {id: browser_relay, name: Bad, topic: x, transport: browser, url: https://example.com, relay_path: /v1/feed/browser_relay}
 """,
             "relay_path",
+        ),
+        (
+            """
+version: 1
+sources:
+  - {id: robots_without_evidence, name: Bad, topic: x, transport: browser, url: https://example.com, robots_denied: true, robots_checked_at: "2026-08-09"}
+""",
+            "robots_evidence",
+        ),
+        (
+            """
+version: 1
+sources:
+  - {id: robots_without_date, name: Bad, topic: x, transport: browser, url: https://example.com, robots_denied: true, robots_evidence: https://example.com/robots.txt}
+""",
+            "robots_checked_at",
         ),
     ],
 )
