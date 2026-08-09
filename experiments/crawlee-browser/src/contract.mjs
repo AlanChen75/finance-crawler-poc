@@ -57,6 +57,13 @@ const isAuthRedirect = (sourceUrl, finalUrl) => {
   );
 };
 
+export function statusCodeFromError(error) {
+  const match = String(error || "").match(/\breceived\s+(\d{3})\s+status code\b/i);
+  if (!match) return null;
+  const statusCode = Number(match[1]);
+  return statusCode >= 400 && statusCode <= 599 ? statusCode : null;
+}
+
 export function evaluatePage(source, page) {
   if (page.skippedReason) {
     return { outcome: "robots_denied", error: page.skippedReason };
@@ -90,7 +97,7 @@ export function evaluatePage(source, page) {
     return { outcome: "http_error", error: `HTTP ${page.statusCode}` };
   }
 
-  const loweredContent = content.toLocaleLowerCase("en-US");
+  const loweredContent = `${page.title || ""}\n${content}`.toLocaleLowerCase("en-US");
   const missingTerms = (source.required_terms || []).filter(
     (term) => !loweredContent.includes(String(term).toLocaleLowerCase("en-US")),
   );

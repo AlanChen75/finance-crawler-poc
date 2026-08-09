@@ -11,6 +11,7 @@ import {
   buildResult,
   buildSkippedResultForEvent,
   selectBrowserSources,
+  statusCodeFromError,
   summarizeResults,
 } from "../src/contract.mjs";
 
@@ -84,14 +85,15 @@ const crawler = new PlaywrightCrawler({
   async failedRequestHandler({ request }) {
     const source = sourceById.get(request.userData.sourceId);
     if (!source) return;
+    const error = request.errorMessages.at(-1) || "Crawlee request failed";
     results.push(
       buildResult(source, {
-        statusCode: null,
+        statusCode: statusCodeFromError(error),
         title: "",
         content: "",
         finalUrl: request.loadedUrl || source.url,
         elapsedMs: Date.now() - Number(request.userData.startedAt || Date.now()),
-        error: request.errorMessages.at(-1) || "Crawlee request failed",
+        error,
       }),
     );
   },

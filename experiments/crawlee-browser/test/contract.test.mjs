@@ -8,6 +8,7 @@ import {
   buildResult,
   evaluatePage,
   selectBrowserSources,
+  statusCodeFromError,
 } from "../src/contract.mjs";
 
 const source = {
@@ -53,7 +54,7 @@ test("the page contract accepts valid content and rejects WAF pages", () => {
     evaluatePage(source, {
       statusCode: 200,
       title: "HotCopper",
-      content: "HotCopper " + "x".repeat(400),
+      content: "x".repeat(400),
       finalUrl: source.url,
     }),
     { outcome: "success", error: "" },
@@ -73,6 +74,26 @@ test("the page contract accepts valid content and rejects WAF pages", () => {
       title: "Forbidden",
       content: "HotCopper " + "x".repeat(400),
       finalUrl: source.url,
+    }),
+    { outcome: "blocked", error: "HTTP 403" },
+  );
+});
+
+test("Crawlee blocked errors do not become timeouts from a package path", () => {
+  const error = [
+    "Error: Request blocked - received 403 status code.",
+    "at @crawlee/basic",
+    "at @apify/timeout/cjs/index.cjs",
+  ].join("\n");
+
+  assert.equal(statusCodeFromError(error), 403);
+  assert.deepEqual(
+    evaluatePage(source, {
+      statusCode: statusCodeFromError(error),
+      title: "",
+      content: "",
+      finalUrl: source.url,
+      error,
     }),
     { outcome: "blocked", error: "HTTP 403" },
   );
