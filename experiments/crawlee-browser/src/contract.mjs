@@ -131,6 +131,25 @@ export function buildResult(source, page) {
   };
 }
 
+export function buildSkippedResultForEvent(sourceByUrl, event) {
+  const source = sourceByUrl.get(event?.url);
+  if (!source) return null;
+  const reason = String(event.reason || "unknown");
+  const page = {
+    statusCode: null,
+    title: "",
+    content: "",
+    finalUrl: source.url,
+    elapsedMs: 0,
+  };
+  if (reason === "robotsTxt") {
+    page.skippedReason = `robots.txt skipped request: ${reason}`;
+  } else {
+    page.error = `Crawlee skipped request: ${reason}`;
+  }
+  return buildResult(source, page);
+}
+
 export function summarizeResults(results) {
   const eligible = results.filter((result) => result.outcome !== "robots_denied");
   const successes = eligible.filter((result) => result.outcome === "success").length;

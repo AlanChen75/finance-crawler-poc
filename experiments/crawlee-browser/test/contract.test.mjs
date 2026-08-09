@@ -4,6 +4,7 @@ import { test } from "node:test";
 import {
   BLOCK_MARKERS,
   CRAWLER_POLICY,
+  buildSkippedResultForEvent,
   buildResult,
   evaluatePage,
   selectBrowserSources,
@@ -109,6 +110,17 @@ test("robots skips remain excluded instead of crawler failures", () => {
     }),
     { outcome: "robots_denied", error: "robots.txt disallowed this URL" },
   );
+});
+
+test("Crawlee 3.18 skipped events resolve by URL without request userData", () => {
+  const result = buildSkippedResultForEvent(
+    new Map([[source.url, source]]),
+    { url: source.url, reason: "robotsTxt" },
+  );
+
+  assert.equal(result.source_id, source.id);
+  assert.equal(result.outcome, "robots_denied");
+  assert.equal(result.error, "robots.txt skipped request: robotsTxt");
 });
 
 test("saved results retain evidence hashes but discard full page content", () => {

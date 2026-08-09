@@ -9,6 +9,7 @@ import {
   CRAWLER_POLICY,
   PREFLIGHT_EXCLUSIONS,
   buildResult,
+  buildSkippedResultForEvent,
   selectBrowserSources,
   summarizeResults,
 } from "../src/contract.mjs";
@@ -28,6 +29,7 @@ if (sources.length !== 38) {
 }
 
 const sourceById = new Map(sources.map((source) => [source.id, source]));
+const sourceByUrl = new Map(sources.map((source) => [source.url, source]));
 const results = sources
   .filter((source) => PREFLIGHT_EXCLUSIONS[source.id])
   .map((source) =>
@@ -93,19 +95,9 @@ const crawler = new PlaywrightCrawler({
       }),
     );
   },
-  async onSkippedRequest({ request, reason }) {
-    const source = sourceById.get(request.userData.sourceId);
-    if (!source) return;
-    results.push(
-      buildResult(source, {
-        skippedReason: `robots.txt skipped request: ${String(reason)}`,
-        statusCode: null,
-        title: "",
-        content: "",
-        finalUrl: source.url,
-        elapsedMs: 0,
-      }),
-    );
+  async onSkippedRequest(event) {
+    const result = buildSkippedResultForEvent(sourceByUrl, event);
+    if (result) results.push(result);
   },
 });
 
