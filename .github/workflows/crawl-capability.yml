@@ -11,6 +11,7 @@ on:
         options:
           - core
           - foreign_communities
+          - news_120
       repetitions:
         description: Same-job burst observations per source (not longitudinal stability)
         required: true
@@ -72,6 +73,7 @@ jobs:
           node --test experiments/cloudflare-browser-run/test/*.test.mjs
 
       - name: Select bounded source manifest
+        if: inputs.scope != 'news_120'
         run: |
           case "${{ inputs.scope }}" in
             core) manifest="sources.yaml" ;;
@@ -81,6 +83,7 @@ jobs:
           echo "PROBE_MANIFEST=$manifest" >> "$GITHUB_ENV"
 
       - name: Probe source matrix
+        if: inputs.scope != 'news_120'
         env:
           CF_RELAY_BASE_URL: ${{ vars.CF_RELAY_BASE_URL }}
         run: >-
@@ -88,6 +91,15 @@ jobs:
           --manifest "$PROBE_MANIFEST"
           --output artifacts
           --repeat "${{ inputs.repetitions }}"
+
+      - name: Probe 120-brand news catalog
+        if: inputs.scope == 'news_120'
+        run: >-
+          python -m finance_crawler_poc.news_cli
+          --catalog news-sources.yaml
+          --executors resource-executors.yaml
+          --current-executor github_actions_crawl4ai
+          --output artifacts
 
       - name: Run Crawlee Browser treatment
         if: inputs.scope == 'foreign_communities'
@@ -99,6 +111,10 @@ jobs:
       - name: Add report to job summary
         if: always() && hashFiles('artifacts/report.md') != ''
         run: cat artifacts/report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Add news report to job summary
+        if: always() && hashFiles('artifacts/news-report.md') != ''
+        run: cat artifacts/news-report.md >> "$GITHUB_STEP_SUMMARY"
 
       - name: Add Crawlee report to job summary
         if: always() && hashFiles('artifacts/crawlee-report.md') != ''

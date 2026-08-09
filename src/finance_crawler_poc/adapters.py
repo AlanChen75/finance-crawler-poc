@@ -21,6 +21,7 @@ ACCEPT_HEADERS = {
         "application/atom+xml, application/rss+xml, application/xml, "
         "text/xml;q=0.9, */*;q=0.1"
     ),
+    "static_html": "text/html, application/xhtml+xml;q=0.9, */*;q=0.1",
 }
 RELAYABLE_STATUS_CODES = frozenset({403, 429})
 

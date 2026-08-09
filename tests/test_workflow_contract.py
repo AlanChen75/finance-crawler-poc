@@ -10,7 +10,11 @@ def test_workflow_can_select_the_bounded_foreign_community_manifest() -> None:
     )
 
     assert "foreign_communities" in workflow
+    assert "news_120" in workflow
     assert "foreign-community-sources.yaml" in workflow
+    assert "news-sources.yaml" in workflow
+    assert "resource-executors.yaml" in workflow
+    assert "github_actions_crawl4ai" in workflow
     assert "finance-crawler-capability-report-${{ inputs.scope }}" in workflow
     assert "default: \"1\"" in workflow
     assert "CF_RELAY_BASE_URL: ${{ vars.CF_RELAY_BASE_URL }}" in workflow

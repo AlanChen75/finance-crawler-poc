@@ -35,6 +35,24 @@ def test_http_adapter_normalizes_json_for_contract_validation() -> None:
     assert json.loads(response.content) == {"price": 42}
 
 
+def test_http_adapter_supports_static_html() -> None:
+    async def handler(request: httpx.Request) -> httpx.Response:
+        assert request.headers["Accept"].startswith("text/html")
+        return httpx.Response(
+            200,
+            text="<html><body>Finance news</body></html>",
+            headers={"content-type": "text/html; charset=utf-8"},
+            request=request,
+        )
+
+    adapter = HttpAdapter(transport=httpx.MockTransport(handler))
+    response = asyncio.run(adapter.fetch(source("static_html")))
+    asyncio.run(adapter.close())
+
+    assert response.status_code == 200
+    assert response.content_type == "text/html"
+
+
 def test_http_adapter_reports_invalid_json_without_throwing() -> None:
     async def handler(_: httpx.Request) -> httpx.Response:
         return httpx.Response(200, text="not json")

@@ -1,6 +1,6 @@
 # Finance Crawler Capability Probe
 
-這個 repository 用可重現的 GitHub Actions 實驗，回答三個問題：
+這個 repository 用可重現的 GitHub Actions 實驗，回答四個問題：
 
 1. Crawl4AI 在 GitHub-hosted Ubuntu runner 能否正常啟動 Chromium？
 2. 財經來源的 browser、JSON API、RSS 三條路徑，直連與合規備援後各自能成功到哪裡？
@@ -20,6 +20,8 @@
 - SEC EDGAR 需要帶姓名與聯絡 email 的 User-Agent，未配置前保持停用。
 
 ## 來源矩陣
+
+新版新聞架構把來源單位改為唯一品牌／機構，`news-sources.yaml` 已固定 120 家（100 家財經專業媒體、20 家綜合媒體財經部門）與四類 148 個 endpoints；RSS、API、靜態 HTML、Browser 只算同品牌的取得路徑。平台依每個工作的能力、時間、回應大小、成本、配額及憑證即時選擇；GitHub Actions 手動 scope `news_120` 會產生品牌級 `news-report.json`。契約與遷移狀態見 [`docs/resource-aware-news-architecture.md`](docs/resource-aware-news-architecture.md)，executor policy 見 `resource-executors.yaml`。
 
 來源定義在 `sources.yaml`，目前涵蓋台灣與國際社群、開發者社群、新聞、RSS、官方資料 API、市場資料 API，以及 Crawl4AI 財經範例網站。每個來源都聲明 topic、kind、transport、最低內容門檻、必要詞、來源脈絡與選源證據。
 
